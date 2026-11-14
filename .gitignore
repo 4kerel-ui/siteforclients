@@ -1,0 +1,6 @@
+*.py
+*.js
+bookmarklet.txt
+*.pdf
+.vscode/
+.idea/
