@@ -1307,9 +1307,9 @@
 </div>
 
 <!-- Подключение сервиса данных, календаря и модуля выполнения -->
-<script src="workout-service.js?v=5"></script>
-<script src="workout-calendar.js?v=5"></script>
-<script src="workout-runner.js?v=5"></script>
+<script src="workout-service.js?v=6"></script>
+<script src="workout-calendar.js?v=6"></script>
+<script src="workout-runner.js?v=6"></script>
 
 <script>
   // Единый компонент безопасного экранирования текста
@@ -1704,6 +1704,12 @@
     }
 
     // 2. Загрузка тренировок из сервера или из store.json
+    let completedIds = [];
+    try {
+      const rawComp = localStorage.getItem('gym_completed_workout_ids');
+      completedIds = rawComp ? JSON.parse(rawComp) : [];
+    } catch (e) {}
+
     let loadedRemoteWorkouts = false;
     if (!isGhPages) {
       try {
@@ -1712,7 +1718,23 @@
           const dataW = await resWorkouts.json();
           if (Array.isArray(dataW.workouts) && dataW.workouts.length > 0) {
             for (const sWorkout of dataW.workouts) {
-              await WorkoutService.adapter.save(sWorkout);
+              const existing = await WorkoutService.getWorkoutById(sWorkout.id);
+              const isLocallyCompleted = completedIds.includes(sWorkout.id) || (existing && existing.status === 'completed');
+              if (isLocallyCompleted) {
+                await WorkoutService.adapter.save({
+                  ...sWorkout,
+                  status: 'completed',
+                  completedAt: (existing && existing.completedAt) || sWorkout.completedAt || new Date().toISOString()
+                });
+              } else if (!existing) {
+                await WorkoutService.adapter.save(sWorkout);
+              } else {
+                await WorkoutService.adapter.save({
+                  ...sWorkout,
+                  status: existing.status || sWorkout.status,
+                  startedAt: existing.startedAt || sWorkout.startedAt
+                });
+              }
             }
             loadedRemoteWorkouts = true;
           }
@@ -1725,7 +1747,23 @@
       const sWorkouts = storeData.workouts[currentClient.id];
       if (Array.isArray(sWorkouts) && sWorkouts.length > 0) {
         for (const sWorkout of sWorkouts) {
-          await WorkoutService.adapter.save(sWorkout);
+          const existing = await WorkoutService.getWorkoutById(sWorkout.id);
+          const isLocallyCompleted = completedIds.includes(sWorkout.id) || (existing && existing.status === 'completed');
+          if (isLocallyCompleted) {
+            await WorkoutService.adapter.save({
+              ...sWorkout,
+              status: 'completed',
+              completedAt: (existing && existing.completedAt) || sWorkout.completedAt || new Date().toISOString()
+            });
+          } else if (!existing) {
+            await WorkoutService.adapter.save(sWorkout);
+          } else {
+            await WorkoutService.adapter.save({
+              ...sWorkout,
+              status: existing.status || sWorkout.status,
+              startedAt: existing.startedAt || sWorkout.startedAt
+            });
+          }
         }
       }
     }
