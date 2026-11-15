@@ -20,10 +20,70 @@
       "slug": "kristina",
       "createdAt": "2026-11-15T15:39:03.835Z",
       "active": true
+    },
+    {
+      "id": "client_dasha-2-0_mwi0fido",
+      "name": "Даша 2.0",
+      "slug": "dasha-2-0",
+      "createdAt": "2026-11-15T15:49:19.692Z",
+      "active": true
     }
   ],
   "workouts": {
     "client_alina_mwhzy8ws": [],
-    "client_kristina_mwi02b6j": []
+    "client_kristina_mwi02b6j": [],
+    "client_dasha-2-0_mwi0fido": [],
+    "client_dasha_seed": [
+      {
+        "id": "workout_client_dasha_seed_1794762375617_p8j0u",
+        "clientId": "client_dasha_seed",
+        "title": "Фулбоди: Спина и плечи (Тест 5.7)",
+        "scheduledDate": "2026-11-15",
+        "status": "planned",
+        "startedAt": null,
+        "completedAt": null,
+        "content": [
+          {
+            "setId": "block_1",
+            "setTitle": "Блок 1: Одиночное",
+            "rounds": "1 упражнение",
+            "exercises": [
+              {
+                "id": "ex_1",
+                "name": "Жим гантелей стоя",
+                "scheme": "3 × 12 (16 кг)",
+                "notes": "Держать пресс в напряжении",
+                "needVideo": true,
+                "mediaUrl": "https://youtu.be/dQw4w9WgXcQ"
+              }
+            ]
+          },
+          {
+            "setId": "block_2",
+            "setTitle": "Суперсет A",
+            "rounds": "2 упражнения",
+            "exercises": [
+              {
+                "id": "ex_2_1",
+                "name": "Подтягивания широким хватом",
+                "scheme": "3 × 10",
+                "notes": "Лопатки вниз",
+                "needVideo": true,
+                "mediaUrl": ""
+              },
+              {
+                "id": "ex_2_2",
+                "name": "Отжимания на брусьях",
+                "scheme": "3 × 12 (10 кг)",
+                "notes": "Корпус слегка вперед",
+                "needVideo": false,
+                "mediaUrl": ""
+              }
+            ]
+          }
+        ],
+        "createdAt": "2026-11-15T17:06:15.617Z"
+      }
+    ]
   }
 }
