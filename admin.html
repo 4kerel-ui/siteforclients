@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Панель тренера | Авторизация</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-inner: #162032;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-focus: rgba(56, 189, 248, 0.5);
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Фоновые декоративные сферы */
+    .bg-glow-1 {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+      top: 15%;
+      left: 20%;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow-2 {
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: 15%;
+      right: 20%;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .auth-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .auth-icon-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    .auth-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .auth-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .password-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-input {
+      width: 100%;
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 48px 14px 16px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.18s ease;
+    }
+
+    .password-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      background: #1b263b;
+    }
+
+    .toggle-pass-btn {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.15rem;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: color 0.15s ease;
+    }
+
+    .toggle-pass-btn:hover {
+      color: #fff;
+    }
+
+    /* Сообщение об ошибке */
+    .error-alert {
+      display: none;
+      background: var(--danger-bg);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: #fca5a5;
+      font-weight: 600;
+      align-items: center;
+      gap: 8px;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+      transition: all 0.18s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ЭКРАН АВТОРИЗОВАННОЙ АДМИН-ПАНЕЛИ */
+    .admin-dashboard {
+      display: none;
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+      z-index: 1;
+      animation: fadeIn 0.25s ease-out;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .admin-nav {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 16px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 1.5rem;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-left: 6px;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-logout:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .admin-content-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .clients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .client-card {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.18s ease;
+    }
+
+    .client-card {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.18s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .client-card:hover {
+      border-color: var(--accent);
+      background: #1b273d;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .client-card-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .client-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .client-info-names {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .client-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .client-active-pill {
+      font-size: 0.72rem;
+      color: var(--success);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .client-card-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-copy-link {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-copy-link:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-copy-link.copied {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--success);
+      color: #a7f3d0;
+    }
+
+    .btn-open-client {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .btn-open-client:hover {
+      background: var(--accent);
+      color: #0b0f19;
+      border-color: var(--accent);
+    }
+
+    /* Экран-заглушка страницы клиента внутри админки */
+    .client-details-view {
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .client-details-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 14px;
+    }
+
+    .btn-back-clients {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-back-clients:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .placeholder-client-box {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 32px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .placeholder-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .placeholder-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .placeholder-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 420px;
+      line-height: 1.5;
+    }
+
+    /* Кнопка добавления клиента "+" */
+    .btn-add-client {
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+      transition: all 0.15s ease;
+    }
+
+    .btn-add-client:hover {
+      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-add-client:active {
+      transform: scale(0.97);
+    }
+
+    /* Модальное окно создания клиента */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px 22px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: modalSlideUp 0.22s ease-out;
+    }
+
+    @keyframes modalSlideUp {
+      from { transform: translateY(12px) scale(0.98); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-close-modal {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: all 0.15s ease;
+    }
+
+    .btn-close-modal:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .modal-actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn-modal-cancel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .btn-modal-submit {
+      flex: 1.2;
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+      transition: all 0.15s ease;
+    }
+
+    .btn-modal-submit:hover {
+      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
+    }
+
+    .input-error-msg {
+      display: none;
+      font-size: 0.78rem;
+      color: #fca5a5;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .loading-state,
+    .empty-state {
+      padding: 30px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- 1. ОКНО АВТОРИЗАЦИИ ТРЕНЕРА -->
+  <div class="auth-card" id="auth-box">
+    <div class="auth-header">
+      <div class="auth-icon-badge">🔒</div>
+      <h1 class="auth-title">Вход для тренера</h1>
+      <p class="auth-subtitle">Введите пароль для доступа к панели управления тренировками и клиентами</p>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="admin-pass" class="form-label">Пароль администратора</label>
+        <div class="password-input-wrap">
+          <input 
+            type="password" 
+            id="admin-pass" 
+            class="password-input" 
+            placeholder="Введите пароль" 
+            required 
+            autocomplete="current-password"
+            autofocus
+          >
+          <button type="button" class="toggle-pass-btn" id="btn-toggle-pass" title="Показать/скрыть пароль" aria-label="Показать/скрыть пароль">
+            👁
+          </button>
+        </div>
+      </div>
+
+      <div class="error-alert" id="auth-error-msg">
+        <span>⚠️</span>
+        <span id="auth-error-text">Неверный пароль</span>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-login" style="margin-top: 14px; width: 100%;">
+        Войти в панель
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. АВТОРИЗОВАННАЯ АДМИНИСТРАТИВНАЯ ПАНЕЛЬ -->
+  <div class="admin-dashboard" id="dashboard-box">
+    <nav class="admin-nav">
+      <div class="admin-brand">
+        <span class="brand-icon">⚡</span>
+        <div>
+          <span class="brand-title">Панель тренера</span>
+          <span class="brand-badge">ADMIN</span>
+        </div>
+      </div>
+      <button type="button" class="btn-logout" id="btn-logout">
+        <span>Выйти</span>
+        <span>🚪</span>
+      </button>
+    </nav>
+
+    <div class="admin-content-card">
+      
+      <!-- ВИД 1: Список клиентов ("Мои клиенты") -->
+      <div id="view-clients-list">
+        <div class="section-title-row">
+          <h2 class="section-title">
+            <span>👥</span>
+            <span>Мои клиенты</span>
+          </h2>
+          <button type="button" class="btn-add-client" id="btn-open-create-modal" title="Добавить нового клиента">
+            <span style="font-size: 1.1rem; line-height: 1;">＋</span>
+            <span>Новый клиент</span>
+          </button>
+        </div>
+
+        <div class="clients-grid" id="clients-container">
+          <div class="loading-state">Загрузка клиентов...</div>
+        </div>
+      </div>
+
+      <!-- ВИД 2: Страница выбранного клиента (заглушка) -->
+      <div id="view-client-details" class="client-details-view">
+        <div class="client-details-header">
+          <button type="button" class="btn-back-clients" id="btn-back-to-clients">
+            <span>←</span>
+            <span>Все клиенты</span>
+          </button>
+          <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Карточка клиента</span>
+        </div>
+
+        <div class="placeholder-client-box">
+          <div class="placeholder-avatar">🏋️‍♀️</div>
+          <h2 class="placeholder-title" id="detail-client-name">Даша</h2>
+          <p class="placeholder-desc">
+            Страница управления клиентом. Здесь на следующих этапах будет отображаться календарь фактически выполненных тренировок и очередь занятий.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3. МОДАЛЬНОЕ ОКНО СОЗДАНИЯ КЛИЕНТА (ИНТЕРФЕЙС И ВАЛИДАЦИЯ) -->
+  <div class="modal-overlay" id="create-client-modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-labelledby="create-modal-title">
+      <div class="modal-header-row">
+        <h3 class="modal-title" id="create-modal-title">
+          <span>👤</span>
+          <span>Новый клиент</span>
+        </h3>
+        <button type="button" class="btn-close-modal" id="btn-close-create-modal" title="Закрыть">
+          &times;
+        </button>
+      </div>
+
+      <form id="create-client-form" novalidate>
+        <div class="form-group">
+          <label for="new-client-name" class="form-label">Имя клиента</label>
+          <input 
+            type="text" 
+            id="new-client-name" 
+            class="password-input" 
+            style="padding-right: 16px;" 
+            placeholder="Например: Алина" 
+            autocomplete="off"
+          >
+          <div class="input-error-msg" id="new-client-error">Имя клиента обязательно для заполнения</div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn-modal-cancel" id="btn-cancel-create-modal">
+            Отмена
+          </button>
+          <button type="submit" class="btn-modal-submit" id="btn-submit-create-modal">
+            Создать
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Хранение ключа сессии
+    const SESSION_KEY = 'gym_admin_auth_token';
+
+    const authBox = document.getElementById('auth-box');
+    const dashboardBox = document.getElementById('dashboard-box');
+    const loginForm = document.getElementById('login-form');
+    const passInput = document.getElementById('admin-pass');
+    const btnTogglePass = document.getElementById('btn-toggle-pass');
+    const btnLogin = document.getElementById('btn-login');
+    const errorAlert = document.getElementById('auth-error-msg');
+    const errorText = document.getElementById('auth-error-text');
+    const btnLogout = document.getElementById('btn-logout');
+
+    const viewClientsList = document.getElementById('view-clients-list');
+    const viewClientDetails = document.getElementById('view-client-details');
+    const clientsContainer = document.getElementById('clients-container');
+    const detailClientName = document.getElementById('detail-client-name');
+    const btnBackToClients = document.getElementById('btn-back-to-clients');
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Загрузка и рендеринг списка клиентов через API (использует getAllClients на сервере)
+    async function loadClients() {
+      const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+      if (!token) return;
+
+      clientsContainer.innerHTML = '<div class="loading-state">Загрузка клиентов...</div>';
+
+      try {
+        const res = await fetch('/api/clients', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          clientsContainer.innerHTML = '<div class="empty-state">Ошибка загрузки списка клиентов</div>';
+          return;
+        }
+
+        const data = await res.json();
+        const clients = data.clients || [];
+
+        if (clients.length === 0) {
+          clientsContainer.innerHTML = '<div class="empty-state">Список клиентов пуст</div>';
+          return;
+        }
+
+        // Рендерим аккуратные адаптивные карточки
+        clientsContainer.innerHTML = clients.map(client => {
+          const clientUrl = `${window.location.origin}/client/${client.slug}`;
+          return `
+            <div class="client-card" data-client-id="${escapeHtml(client.id)}" data-client-name="${escapeHtml(client.name)}">
+              <div class="client-card-left">
+                <div class="client-avatar">🏋️‍♀️</div>
+                <div class="client-info-names">
+                  <span class="client-name">${escapeHtml(client.name)}</span>
+                  <span class="client-active-pill">
+                    <span style="font-size: 0.6rem;">●</span>
+                    <span>${client.active ? 'Активен' : 'Неактивен'}</span>
+                  </span>
+                </div>
+              </div>
+              <div class="client-card-right">
+                <button 
+                  type="button" 
+                  class="btn-copy-link" 
+                  data-url="${escapeHtml(clientUrl)}"
+                  title="Скопировать ссылку для клиента"
+                >
+                  <span>🔗</span>
+                  <span class="copy-label">Ссылка</span>
+                </button>
+                <button type="button" class="btn-open-client" title="Открыть карточку клиента">
+                  <span>Открыть</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Кнопка копирования персональной ссылки клиента
+        clientsContainer.querySelectorAll('.btn-copy-link').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Исключаем клик по всей карточке
+            const url = btn.getAttribute('data-url');
+            if (!url) return;
+
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(url);
+              } else {
+                // Fallback для старых окружений
+                const tmp = document.createElement('textarea');
+                tmp.value = url;
+                document.body.appendChild(tmp);
+                tmp.select();
+                document.execCommand('copy');
+                document.body.removeChild(tmp);
+              }
+
+              const label = btn.querySelector('.copy-label');
+              btn.classList.add('copied');
+              label.textContent = 'Скопировано!';
+              setTimeout(() => {
+                btn.classList.remove('copied');
+                label.textContent = 'Ссылка';
+              }, 2000);
+            } catch (err) {
+              alert(`Ссылка клиента: ${url}`);
+            }
+          });
+        });
+
+        // Нажатие на карточку клиента открывает страницу-заглушку с его именем
+        clientsContainer.querySelectorAll('.client-card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-copy-link')) return;
+            const name = card.getAttribute('data-client-name') || 'Клиент';
+            openClientDetails(name);
+          });
+        });
+
+      } catch (err) {
+        clientsContainer.innerHTML = '<div class="empty-state">Не удалось связаться с сервером</div>';
+      }
+    }
+
+    // Открытие страницы-заглушки клиента
+    function openClientDetails(clientName) {
+      detailClientName.textContent = clientName;
+      viewClientsList.style.display = 'none';
+      viewClientDetails.style.display = 'flex';
+    }
+
+    // Возврат к списку клиентов
+    btnBackToClients.addEventListener('click', () => {
+      viewClientDetails.style.display = 'none';
+      viewClientsList.style.display = 'block';
+    });
+
+    // ----------------------------------------------------
+    // Логика модального окна добавления клиента (Интерфейс и валидация)
+    // ----------------------------------------------------
+    const createModal = document.getElementById('create-client-modal');
+    const btnOpenCreateModal = document.getElementById('btn-open-create-modal');
+    const btnCloseCreateModal = document.getElementById('btn-close-create-modal');
+    const btnCancelCreateModal = document.getElementById('btn-cancel-create-modal');
+    const createClientForm = document.getElementById('create-client-form');
+    const newClientInput = document.getElementById('new-client-name');
+    const newClientError = document.getElementById('new-client-error');
+
+    function openCreateModal() {
+      newClientInput.value = '';
+      hideNameError();
+      createModal.classList.add('active');
+      createModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => newClientInput.focus(), 50);
+    }
+
+    function closeCreateModal() {
+      createModal.classList.remove('active');
+      createModal.setAttribute('aria-hidden', 'true');
+      newClientInput.value = '';
+      hideNameError();
+    }
+
+    function showNameError(msg) {
+      newClientError.textContent = msg || 'Имя клиента обязательно для заполнения';
+      newClientError.style.display = 'block';
+      newClientInput.focus();
+    }
+
+    function hideNameError() {
+      newClientError.style.display = 'none';
+    }
+
+    btnOpenCreateModal.addEventListener('click', openCreateModal);
+    btnCloseCreateModal.addEventListener('click', closeCreateModal);
+    btnCancelCreateModal.addEventListener('click', closeCreateModal);
+
+    // Закрытие по клику вне окна
+    createModal.addEventListener('click', (e) => {
+      if (e.target === createModal) {
+        closeCreateModal();
+      }
+    });
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && createModal.classList.contains('active')) {
+        closeCreateModal();
+      }
+    });
+
+    newClientInput.addEventListener('input', hideNameError);
+
+    const btnSubmitCreateModal = document.getElementById('btn-submit-create-modal');
+
+    // Сохранение нового клиента в общее хранилище
+    createClientForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const trimmedName = newClientInput.value.trim();
+
+      if (!trimmedName) {
+        showNameError('Имя клиента обязательно для заполнения (не может быть пустым)');
+        return;
+      }
+
+      const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+      if (!token) {
+        showNameError('Сессия администратора не найдена. Пожалуйста, выполните вход заново.');
+        return;
+      }
+
+      // Блокируем кнопку на время запроса для исключения дубликатов при повторном клике
+      btnSubmitCreateModal.disabled = true;
+      btnSubmitCreateModal.textContent = 'Сохранение...';
+      hideNameError();
+
+      try {
+        const res = await fetch('/api/clients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name: trimmedName })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          // Успешно сохранено: закрываем модальное окно и обновляем список
+          closeCreateModal();
+          await loadClients();
+        } else {
+          // Выводим ошибку от сервера (например, дубликат имени)
+          showNameError(data.message || 'Ошибка при сохранении клиента');
+        }
+      } catch (err) {
+        showNameError('Не удалось связаться с сервером. Попробуйте еще раз.');
+      } finally {
+        btnSubmitCreateModal.disabled = false;
+        btnSubmitCreateModal.textContent = 'Создать';
+      }
+    });
+
+    // 1. Показать / скрыть пароль
+    btnTogglePass.addEventListener('click', () => {
+      const isPass = passInput.type === 'password';
+      passInput.type = isPass ? 'text' : 'password';
+      btnTogglePass.textContent = isPass ? '🙈' : '👁';
+    });
+
+    // 2. Отображение ошибки
+    function showError(msg) {
+      errorText.textContent = msg || 'Неверный пароль администратора';
+      errorAlert.style.display = 'flex';
+      passInput.focus();
+    }
+
+    function hideError() {
+      errorAlert.style.display = 'none';
+    }
+
+    passInput.addEventListener('input', hideError);
+
+    // 3. Переключение интерфейса между экраном входа и панелью
+    function showDashboard() {
+      authBox.style.display = 'none';
+      dashboardBox.style.display = 'flex';
+      viewClientDetails.style.display = 'none';
+      viewClientsList.style.display = 'block';
+      loadClients();
+    }
+
+    function showAuth() {
+      authBox.style.display = 'flex';
+      dashboardBox.style.display = 'none';
+      passInput.value = '';
+      hideError();
+    }
+
+    // 4. Проверка сохранённой сессии при загрузке страницы
+    async function checkExistingSession() {
+      const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+      if (!token) {
+        showAuth();
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/verify', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          showDashboard();
+        } else {
+          // Токен устарел или недействителен
+          sessionStorage.removeItem(SESSION_KEY);
+          localStorage.removeItem(SESSION_KEY);
+          showAuth();
+        }
+      } catch (err) {
+        // Если сервер недоступен временно, проверяем наличие токена
+        if (token) {
+          showDashboard();
+        } else {
+          showAuth();
+        }
+      }
+    }
+
+    // 5. Обработка формы входа
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = passInput.value.trim();
+      if (!password) return;
+
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'Проверка...';
+      hideError();
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          // Сохраняем сессионный токен в sessionStorage (сессия браузера)
+          sessionStorage.setItem(SESSION_KEY, data.token);
+          showDashboard();
+        } else {
+          showError(data.message || 'Неверный пароль администратора');
+        }
+      } catch (err) {
+        showError('Ошибка связи с сервером. Попробуйте еще раз.');
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Войти в панель';
+      }
+    });
+
+    // 6. Выход из административной панели
+    btnLogout.addEventListener('click', async () => {
+      const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+      if (token) {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } catch (e) {}
+      }
+      sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SESSION_KEY);
+      showAuth();
+    });
+
+    // Инициализация при открытии страницы
+    checkExistingSession();
+  </script>
+</body>
+</html>
