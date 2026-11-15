@@ -725,6 +725,32 @@
       background: #111827;
     }
 
+    .btn-block-move {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .btn-block-move:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.2);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .btn-block-move:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
     .btn-delete-block {
       background: rgba(239, 68, 68, 0.1);
       border: 1px solid rgba(239, 68, 68, 0.25);
@@ -1887,6 +1913,21 @@
       renderEditorBlocks();
     }
 
+    function moveBlock(blockId, direction) {
+      const idx = editorBlocks.findIndex(b => b.id === blockId);
+      if (idx === -1) return;
+
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= editorBlocks.length) return;
+
+      // Меняем блоки местами в массиве
+      const temp = editorBlocks[idx];
+      editorBlocks[idx] = editorBlocks[targetIdx];
+      editorBlocks[targetIdx] = temp;
+
+      renderEditorBlocks();
+    }
+
     function removeBlock(blockId) {
       editorBlocks = editorBlocks.filter(b => b.id !== blockId);
       renderEditorBlocks();
@@ -1903,7 +1944,10 @@
         return;
       }
 
-      editorBlocksList.innerHTML = editorBlocks.map((block) => {
+      editorBlocksList.innerHTML = editorBlocks.map((block, bIdx) => {
+        const isFirstBlock = bIdx === 0;
+        const isLastBlock = bIdx === editorBlocks.length - 1;
+
         if (block.type === 'single') {
           return `
             <div class="editor-block-card" data-block-id="${escapeHtml(block.id)}">
@@ -1918,9 +1962,25 @@
                     placeholder="Название блока"
                   >
                 </div>
-                <button type="button" class="btn-delete-block" data-delete-block="${escapeHtml(block.id)}" title="Удалить блок">
-                  🗑
-                </button>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <button 
+                    type="button" 
+                    class="btn-block-move" 
+                    data-block-move="-1" 
+                    ${isFirstBlock ? 'disabled' : ''} 
+                    title="Поднять блок выше"
+                  >▲</button>
+                  <button 
+                    type="button" 
+                    class="btn-block-move" 
+                    data-block-move="1" 
+                    ${isLastBlock ? 'disabled' : ''} 
+                    title="Опустить блок ниже"
+                  >▼</button>
+                  <button type="button" class="btn-delete-block" data-delete-block="${escapeHtml(block.id)}" title="Удалить блок">
+                    🗑
+                  </button>
+                </div>
               </div>
 
               <!-- Поля одиночного упражнения -->
@@ -2091,9 +2151,25 @@
                     placeholder="Название суперсета"
                   >
                 </div>
-                <button type="button" class="btn-delete-block" data-delete-block="${escapeHtml(block.id)}" title="Удалить весь суперсет">
-                  🗑
-                </button>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <button 
+                    type="button" 
+                    class="btn-block-move" 
+                    data-block-move="-1" 
+                    ${isFirstBlock ? 'disabled' : ''} 
+                    title="Поднять блок выше"
+                  >▲</button>
+                  <button 
+                    type="button" 
+                    class="btn-block-move" 
+                    data-block-move="1" 
+                    ${isLastBlock ? 'disabled' : ''} 
+                    title="Опустить блок ниже"
+                  >▼</button>
+                  <button type="button" class="btn-delete-block" data-delete-block="${escapeHtml(block.id)}" title="Удалить весь суперсет">
+                    🗑
+                  </button>
+                </div>
               </div>
 
               <!-- Список упражнений внутри суперсета -->
