@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Личный кабинет клиента | Тренировочный план</title>
   <style>
     :root {
@@ -1304,9 +1307,9 @@
 </div>
 
 <!-- Подключение сервиса данных, календаря и модуля выполнения -->
-<script src="workout-service.js?v=3"></script>
-<script src="workout-calendar.js?v=3"></script>
-<script src="workout-runner.js?v=3"></script>
+<script src="workout-service.js?v=5"></script>
+<script src="workout-calendar.js?v=5"></script>
+<script src="workout-runner.js?v=5"></script>
 
 <script>
   // Единый компонент безопасного экранирования текста
@@ -1598,78 +1601,92 @@
     const isGhPages = window.location.hostname.includes('github.io');
     let clientSlug = '';
 
-    if (pathname.startsWith('/client/')) {
-      clientSlug = pathname.replace('/client/', '').replace(/\/$/, '').trim();
+    if (pathname.includes('/client/')) {
+      const parts = pathname.split('/client/');
+      clientSlug = parts[parts.length - 1].replace(/\/$/, '').trim();
     } else {
       const urlParams = new URLSearchParams(window.location.search);
       clientSlug = urlParams.get('client') || '';
     }
 
-    // Если адрес содержит конкретный slug
-    if (clientSlug) {
-      if (isGhPages) {
-        // На GitHub Pages нет Node.js API — определяем клиента локально
-        let localClients = [];
-        try {
-          const raw = localStorage.getItem('gym_clients_fallback_store');
-          localClients = raw ? JSON.parse(raw) : [];
-        } catch (e) {}
+    // Если slug не указан или пустой - по умолчанию открываем Дашу
+    if (!clientSlug || clientSlug.toLowerCase() === 'dasha') {
+      clientSlug = 'dasha';
+    }
 
-        const defaultClients = [
-          { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true },
-          { id: 'client_alina_seed', name: 'Алина', slug: 'alina', active: true }
-        ];
+    const defaultClients = [
+      { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true },
+      { id: 'client_alina_seed', name: 'Алина', slug: 'alina', active: true }
+    ];
 
-        currentClient = localClients.find(c => (c.slug && c.slug.toLowerCase() === clientSlug.toLowerCase()) || (c.name && c.name.toLowerCase() === clientSlug.toLowerCase()))
-          || defaultClients.find(c => c.slug.toLowerCase() === clientSlug.toLowerCase());
+    let storeData = null;
 
-        if (!currentClient) {
-          // Показываем экран "Клиент не найден"
-          const returnUrl = `${window.location.origin}${window.location.pathname}?client=dasha`;
-          document.body.innerHTML = `
-            <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 20px; text-align: center;">
-              <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px;">
-                🔍
-              </div>
-              <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Клиент не найден</h1>
-              <p style="font-size: 0.95rem; color: #94a3b8; max-width: 400px; line-height: 1.5; margin-bottom: 24px;">
-                Клиент «${escapeHtml(clientSlug)}» не найден. Проверьте правильность ссылки или обратитесь к тренеру.
-              </p>
-              <a href="${returnUrl}" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
-                Перейти в кабинет Даши →
-              </a>
-            </div>
-          `;
-          return;
+    // 1. Попытка загрузить актуальный store.json (синхронизация с сервером/репозиторием)
+    try {
+      const storeRes = await fetch(`./data/store.json?t=${Date.now()}`);
+      if (storeRes.ok) storeData = await storeRes.json();
+    } catch (e1) {}
+
+    if (!storeData && isGhPages) {
+      try {
+        const rawRes = await fetch(`https://raw.githubusercontent.com/4kerel-ui/siteforclients/main/data/store.json?t=${Date.now()}`);
+        if (rawRes.ok) storeData = await rawRes.json();
+      } catch (e2) {}
+    }
+
+    // Поиск клиента в загруженном store.json
+    if (storeData && Array.isArray(storeData.clients)) {
+      currentClient = storeData.clients.find(c =>
+        (c.slug && c.slug.toLowerCase() === clientSlug.toLowerCase()) ||
+        (c.name && c.name.toLowerCase() === clientSlug.toLowerCase())
+      );
+    }
+
+    // Если в store.json не найден, проверяем локальный бэкенд (для режима с node server.js)
+    if (!currentClient && !isGhPages) {
+      try {
+        const res = await fetch(`/api/client-info/${encodeURIComponent(clientSlug)}`);
+        if (res.ok) {
+          const data = await res.json();
+          currentClient = data.client;
         }
-      } else {
-        try {
-          const res = await fetch(`/api/client-info/${encodeURIComponent(clientSlug)}`);
-          if (res.ok) {
-            const data = await res.json();
-            currentClient = data.client;
-          } else {
-            // Клиент не найден по указанному адресу
-            document.body.innerHTML = `
-              <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 20px; text-align: center;">
-                <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px;">
-                  🔍
-                </div>
-                <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Клиент не найден</h1>
-                <p style="font-size: 0.95rem; color: #94a3b8; max-width: 400px; line-height: 1.5; margin-bottom: 24px;">
-                  По адресу <code>/client/${escapeHtml(clientSlug)}</code> клиент не зарегистрирован. Проверьте правильность ссылки или обратитесь к тренеру.
-                </p>
-                <a href="/client/dasha" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
-                  Перейти в кабинет Даши →
-                </a>
-              </div>
-            `;
-            return;
-          }
-        } catch (err) {
-          console.warn('Сервер недоступен, fallback режим:', err);
-        }
-      }
+      } catch (err) {}
+    }
+
+    // Fallback к локальным клиентам или дефолтным (Даша/Алина)
+    if (!currentClient) {
+      let localClients = [];
+      try {
+        const raw = localStorage.getItem('gym_clients_fallback_store');
+        localClients = raw ? JSON.parse(raw) : [];
+      } catch (e) {}
+
+      currentClient = localClients.find(c => 
+        (c.slug && c.slug.toLowerCase() === clientSlug.toLowerCase()) || 
+        (c.name && c.name.toLowerCase() === clientSlug.toLowerCase())
+      ) || defaultClients.find(c => c.slug.toLowerCase() === clientSlug.toLowerCase());
+    }
+
+    // Если клиент всё ещё не найден
+    if (!currentClient) {
+      const returnUrl = isGhPages 
+        ? `${window.location.origin}/siteforclients/client.html?client=dasha`
+        : `/client/dasha`;
+      document.body.innerHTML = `
+        <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 20px; text-align: center;">
+          <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px;">
+            🔍
+          </div>
+          <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Клиент не найден</h1>
+          <p style="font-size: 0.95rem; color: #94a3b8; max-width: 400px; line-height: 1.5; margin-bottom: 24px;">
+            Клиент «${escapeHtml(clientSlug)}» не найден. Проверьте правильность ссылки или обратитесь к тренеру.
+          </p>
+          <a href="${returnUrl}" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
+            Перейти в кабинет Даши →
+          </a>
+        </div>
+      `;
+      return;
     }
 
     // Если клиент найден, обновляем имя в приветствии
@@ -1686,27 +1703,34 @@
       WorkoutService.setAdapter(new WorkoutServiceModule.LocalStorageAdapter(clientKey));
     }
 
-    // Загрузка тренировок с сервера (если доступны)
-    if (currentClient && currentClient.id) {
+    // 2. Загрузка тренировок из сервера или из store.json
+    let loadedRemoteWorkouts = false;
+    if (!isGhPages) {
       try {
         const resWorkouts = await fetch(`/api/client-workouts/${encodeURIComponent(clientSlug || currentClient.slug)}`);
         if (resWorkouts.ok) {
           const dataW = await resWorkouts.json();
           if (Array.isArray(dataW.workouts) && dataW.workouts.length > 0) {
             for (const sWorkout of dataW.workouts) {
-              const existing = await WorkoutService.getWorkoutById(sWorkout.id);
-              if (!existing) {
-                await WorkoutService.adapter.save(sWorkout);
-              }
+              await WorkoutService.adapter.save(sWorkout);
             }
+            loadedRemoteWorkouts = true;
           }
         }
-      } catch (errW) {
-        console.warn('Сервер тренировок недоступен:', errW);
+      } catch (errW) {}
+    }
+
+    // Если работаем на GitHub Pages (или локальный бэкенд не вернул тренировки), читаем из storeData
+    if (!loadedRemoteWorkouts && storeData && storeData.workouts && currentClient && currentClient.id) {
+      const sWorkouts = storeData.workouts[currentClient.id];
+      if (Array.isArray(sWorkouts) && sWorkouts.length > 0) {
+        for (const sWorkout of sWorkouts) {
+          await WorkoutService.adapter.save(sWorkout);
+        }
       }
     }
 
-    // 1. Инициализируем хранилище и тестовые данные (для Даши - дефолтные сиды)
+    // 3. Инициализируем хранилище и тестовые данные (для Даши - сиды)
     if (isDasha) {
       await WorkoutService.ensureSeeded();
     }
