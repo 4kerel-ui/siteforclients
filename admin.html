@@ -830,6 +830,295 @@
     /* Стили элементов суперсета */
     
     /* Стили переключателя (toggle switch) и бейджей Stage 5.5 */
+    
+    /* ==============================================================
+       ПРЕДПРОСМОТР ТРЕНИРОВКИ (STAGE 5.6)
+    ============================================================== */
+    .btn-editor-preview {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-editor-preview:hover {
+      background: rgba(56, 189, 248, 0.22);
+      color: #fff;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .preview-modal-box {
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.18);
+      animation: modalSlideUp 0.22s ease-out;
+    }
+
+    .preview-modal-header {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--card-border);
+      gap: 12px;
+      background: rgba(11, 15, 25, 0.6);
+    }
+
+    .preview-modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-badge-status {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    /* Стили компонентов клиентского отображения (как в client.html) */
+    .preview-modal-body .set-block {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 12px;
+    }
+
+    .preview-modal-body .set-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .preview-modal-body .set-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .preview-modal-body .circuit-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: rgba(148, 163, 184, 0.08);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    .preview-modal-body .exercises-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .preview-modal-body .exercise-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(11, 15, 25, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .preview-modal-body .exercise-item.has-media {
+      cursor: pointer;
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+
+    .preview-modal-body .exercise-item.has-media:hover {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: var(--accent);
+    }
+
+    .preview-modal-body .ex-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .preview-modal-body .ex-name {
+      font-weight: 600;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      color: #fff;
+    }
+
+    .preview-modal-body .video-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 6px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .preview-modal-body .ex-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .preview-modal-body .meta-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--success);
+    }
+
+    .preview-modal-body .video-record-callout {
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      width: fit-content;
+    }
+
+    .preview-modal-body .video-record-icon {
+      font-size: 0.95rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .preview-modal-body .video-record-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #fca5a5;
+      letter-spacing: 0.01em;
+    }
+
+    .preview-modal-body .ex-notes {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 5px 8px;
+      border-radius: 6px;
+    }
+
+    /* Модалка просмотра техники упражнения в админке */
+    .technique-box {
+      width: 100%;
+      max-width: 460px;
+      max-height: 85vh;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.2);
+      animation: modalSlideUp 0.22s ease-out;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 */
+      background: #000;
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .image-media-container {
+      width: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 380px;
+      overflow: hidden;
+    }
+
+    .technique-img {
+      max-width: 100%;
+      max-height: 380px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .empty-media-msg {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      background: rgba(11, 15, 25, 0.5);
+      line-height: 1.5;
+    }
+
+    .technique-desc-box {
+      padding: 14px 16px;
+      background: var(--card-inner);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .technique-scheme {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .technique-notes {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
     .editor-toggle-row {
       display: flex;
       align-items: center;
@@ -1459,6 +1748,10 @@
           <button type="button" class="btn-modal-cancel" id="btn-editor-cancel">
             Отмена
           </button>
+          <button type="button" class="btn-editor-preview" id="btn-editor-preview">
+            <span>👁</span>
+            <span>Предпросмотр</span>
+          </button>
           <button type="button" class="btn-modal-submit" id="btn-editor-save">
             Сохранить
           </button>
@@ -1906,6 +2199,234 @@
 
     blockTypeModal.addEventListener('click', (e) => {
       if (e.target === blockTypeModal) closeChoiceModal();
+    });
+
+    
+    // Элементы предпросмотра (Stage 5.6)
+    const btnEditorPreview = document.getElementById('btn-editor-preview');
+    const workoutPreviewModal = document.getElementById('workout-preview-modal');
+    const btnClosePreviewModal = document.getElementById('btn-close-preview-modal');
+    const btnBackToEditor = document.getElementById('btn-back-to-editor');
+    const previewWorkoutTitle = document.getElementById('preview-workout-title');
+    const previewModalBody = document.getElementById('preview-modal-body');
+
+    // Элементы техники предпросмотра
+    const previewTechniqueModal = document.getElementById('preview-technique-modal');
+    const btnClosePreviewTechnique = document.getElementById('btn-close-preview-technique');
+    const previewTechniqueTitle = document.getElementById('preview-technique-title');
+    const previewTechniqueMediaSlot = document.getElementById('preview-technique-media-slot');
+    const previewTechniqueScheme = document.getElementById('preview-technique-scheme');
+    const previewTechniqueNotes = document.getElementById('preview-technique-notes');
+
+    /**
+     * Конвертация состояния редактора в клиентскую структуру content
+     */
+    function buildClientContentFromEditor() {
+      return editorBlocks.map(block => {
+        if (block.type === 'single') {
+          const sets = block.sets || 3;
+          const reps = block.reps || '12';
+          const weight = block.weight ? block.weight.trim() : '';
+          let scheme = `${sets} × ${reps}`;
+          if (weight) scheme += ` (${weight})`;
+
+          return {
+            setId: block.id,
+            setTitle: block.blockTitle || 'Одиночное упражнение',
+            rounds: '1 упражнение',
+            exercises: [
+              {
+                id: block.id + '_ex',
+                name: block.exerciseName || 'Упражнение без названия',
+                scheme: scheme,
+                notes: block.notes || '',
+                needVideo: Boolean(block.needVideo),
+                mediaUrl: block.mediaUrl || ''
+              }
+            ]
+          };
+        } else if (block.type === 'superset') {
+          const count = (block.exercises || []).length;
+          return {
+            setId: block.id,
+            setTitle: block.blockTitle || 'Суперсет',
+            rounds: `${count} ${count === 1 ? 'упражнение' : (count < 5 ? 'упражнения' : 'упражнений')}`,
+            exercises: (block.exercises || []).map(ex => {
+              const sets = ex.sets || 3;
+              const reps = ex.reps || '10-12';
+              const weight = ex.weight ? ex.weight.trim() : '';
+              let scheme = `${sets} × ${reps}`;
+              if (weight) scheme += ` (${weight})`;
+
+              return {
+                id: ex.id,
+                name: ex.name || 'Упражнение без названия',
+                scheme: scheme,
+                notes: ex.notes || '',
+                needVideo: Boolean(ex.needVideo),
+                mediaUrl: ex.mediaUrl || ''
+              };
+            })
+          };
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    /**
+     * Единый компонент отображения содержания тренировки (клиентский вид)
+     */
+    function renderPreviewContentHtml(content) {
+      if (!Array.isArray(content) || content.length === 0) {
+        return '<div style="text-align: center; color: var(--text-muted); padding: 30px 10px;">В тренировке пока нет блоков с упражнениями.</div>';
+      }
+
+      return content.map(block => `
+        <div class="set-block">
+          <div class="set-header">
+            <span class="set-title">${escapeHtml(block.setTitle || 'Блок')}</span>
+            <span class="circuit-badge">${escapeHtml(block.rounds || '')}</span>
+          </div>
+          <div class="exercises-list">
+            ${(block.exercises || []).map(ex => {
+              const hasMedia = Boolean(ex.mediaUrl && ex.mediaUrl.trim());
+              return `
+                <div 
+                  class="exercise-item ${hasMedia ? 'has-media' : 'no-media'}" 
+                  data-ex-json="${escapeHtml(JSON.stringify(ex))}"
+                  title="${hasMedia ? 'Нажмите для просмотра видео техники' : ''}"
+                >
+                  <div class="ex-top">
+                    <span class="ex-name">${escapeHtml(ex.name)}</span>
+                    ${hasMedia ? '<span class="video-hint">🎬 Видео</span>' : ''}
+                  </div>
+                  <div class="ex-meta">
+                    <span class="meta-tag">${escapeHtml(ex.scheme || 'Рабочий темп')}</span>
+                  </div>
+                  ${ex.needVideo ? `
+                    <div class="video-record-callout">
+                      <span class="video-record-icon">📹</span>
+                      <span class="video-record-label">Снять видео</span>
+                    </div>
+                  ` : ''}
+                  ${ex.notes ? `<div class="ex-notes">${escapeHtml(ex.notes)}</div>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /**
+     * Рендеринг видео/фото техники в модальном окне
+     */
+    function renderTechniqueMedia(src) {
+      if (!src || !src.trim()) return '';
+      const s = src.trim();
+
+      // YouTube
+      let ytId = null;
+      if (/^[a-zA-Z0-9_-]{11}$/.test(s)) {
+        ytId = s;
+      } else {
+        const match = s.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([a-zA-Z0-9_-]{11})/i);
+        if (match) ytId = match[1];
+      }
+
+      if (ytId) {
+        return `
+          <div class="video-container">
+            <iframe 
+              src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" 
+              allow="autoplay; encrypted-media" 
+              allowfullscreen>
+            </iframe>
+          </div>
+        `;
+      }
+
+      // Изображение / gif / прямая ссылка
+      if (/\.(gif|png|jpe?g|webp|svg)(\?.*)?$/i.test(s) || /^https?:\/\//i.test(s)) {
+        return `
+          <div class="image-media-container">
+            <img src="${escapeHtml(s)}" alt="Техника выполнения" class="technique-img" loading="lazy">
+          </div>
+        `;
+      }
+
+      return '<div class="empty-media-msg">Не удалось загрузить медиа по ссылке</div>';
+    }
+
+    function openPreviewTechniqueModal(ex) {
+      if (!ex || !ex.mediaUrl || !ex.mediaUrl.trim()) return;
+      previewTechniqueTitle.textContent = ex.name || 'Техника упражнения';
+      previewTechniqueScheme.textContent = ex.scheme || 'Схема не указана';
+      previewTechniqueNotes.textContent = ex.notes || '';
+      previewTechniqueNotes.style.display = ex.notes ? 'block' : 'none';
+      previewTechniqueMediaSlot.innerHTML = renderTechniqueMedia(ex.mediaUrl);
+
+      previewTechniqueModal.classList.add('active');
+      previewTechniqueModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closePreviewTechniqueModal() {
+      previewTechniqueMediaSlot.innerHTML = '';
+      previewTechniqueModal.classList.remove('active');
+      previewTechniqueModal.setAttribute('aria-hidden', 'true');
+    }
+
+    btnClosePreviewTechnique.addEventListener('click', closePreviewTechniqueModal);
+    previewTechniqueModal.addEventListener('click', (e) => {
+      if (e.target === previewTechniqueModal) closePreviewTechniqueModal();
+    });
+
+    /**
+     * Открытие окна Предпросмотра (Stage 5.6)
+     */
+    function openWorkoutPreview() {
+      const workoutTitle = editorWorkoutTitleInput.value.trim() || 'Новая тренировка (без названия)';
+      previewWorkoutTitle.textContent = workoutTitle;
+
+      if (editorBlocks.length === 0) {
+        alert('Добавьте хотя бы один блок в тренировку перед предпросмотром.');
+        return;
+      }
+
+      const clientContent = buildClientContentFromEditor();
+      previewModalBody.innerHTML = renderPreviewContentHtml(clientContent);
+
+      // Привязка кликов по упражнениям с видео
+      previewModalBody.querySelectorAll('.exercise-item.has-media').forEach(item => {
+        item.addEventListener('click', () => {
+          try {
+            const exData = JSON.parse(item.getAttribute('data-ex-json'));
+            openPreviewTechniqueModal(exData);
+          } catch (e) {}
+        });
+      });
+
+      workoutPreviewModal.classList.add('active');
+      workoutPreviewModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeWorkoutPreview() {
+      workoutPreviewModal.classList.remove('active');
+      workoutPreviewModal.setAttribute('aria-hidden', 'true');
+      closePreviewTechniqueModal();
+    }
+
+    if (btnEditorPreview) {
+      btnEditorPreview.addEventListener('click', openWorkoutPreview);
+    }
+    if (btnClosePreviewModal) {
+      btnClosePreviewModal.addEventListener('click', closeWorkoutPreview);
+    }
+    if (btnBackToEditor) {
+      btnBackToEditor.addEventListener('click', closeWorkoutPreview);
+    }
+    workoutPreviewModal.addEventListener('click', (e) => {
+      if (e.target === workoutPreviewModal) closeWorkoutPreview();
     });
 
     // Вариант 1: Добавление одиночного упражнения
