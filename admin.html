@@ -3642,6 +3642,18 @@
         return;
       }
 
+      const isGhPages = window.location.hostname.includes('github.io');
+
+      // На GitHub Pages нет серверного API — просто проверяем наличие токена
+      if (isGhPages) {
+        if (token) {
+          showDashboard();
+        } else {
+          showAuth();
+        }
+        return;
+      }
+
       try {
         const res = await fetch('/api/auth/verify', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -3649,7 +3661,6 @@
         if (res.ok) {
           showDashboard();
         } else {
-          // Токен устарел или недействителен
           sessionStorage.removeItem(SESSION_KEY);
           localStorage.removeItem(SESSION_KEY);
           showAuth();
@@ -3674,6 +3685,22 @@
       btnLogin.textContent = 'Проверка...';
       hideError();
 
+      // Определяем, работаем ли на GitHub Pages (статический хостинг без бэкенда)
+      const isGhPages = window.location.hostname.includes('github.io');
+
+      if (isGhPages) {
+        // На GitHub Pages нет серверного бэкенда — проверяем пароль локально
+        if (password === '8950') {
+          sessionStorage.setItem(SESSION_KEY, 'gh_pages_session_' + Date.now());
+          showDashboard();
+        } else {
+          showError('Неверный пароль администратора');
+        }
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Войти в панель';
+        return;
+      }
+
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -3681,7 +3708,12 @@
           body: JSON.stringify({ password })
         });
 
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          throw new Error('Server returned non-JSON response');
+        }
 
         if (res.ok && data.success) {
           sessionStorage.setItem(SESSION_KEY, data.token);
@@ -3692,7 +3724,7 @@
           return;
         }
       } catch (err) {
-        // Fallback для GitHub Pages (где нет бэкенда Node.js)
+        // Fallback: если сервер недоступен, проверяем пароль локально
         if (password === '8950') {
           sessionStorage.setItem(SESSION_KEY, 'gh_pages_session_' + Date.now());
           showDashboard();
