@@ -1595,6 +1595,7 @@
     // 0. Определение клиента по индивидуальному адресу (/client/:slug или query параметр ?client=...)
     let currentClient = null;
     const pathname = window.location.pathname;
+    const isGhPages = window.location.hostname.includes('github.io');
     let clientSlug = '';
 
     if (pathname.startsWith('/client/')) {
@@ -1604,15 +1605,27 @@
       clientSlug = urlParams.get('client') || '';
     }
 
-    // Если адрес содержит конкретный slug, проверяем существование клиента на сервере
+    // Если адрес содержит конкретный slug
     if (clientSlug) {
-      try {
-        const res = await fetch(`/api/client-info/${encodeURIComponent(clientSlug)}`);
-        if (res.ok) {
-          const data = await res.json();
-          currentClient = data.client;
-        } else {
-          // Клиент не найден по указанному адресу
+      if (isGhPages) {
+        // На GitHub Pages нет Node.js API — определяем клиента локально
+        let localClients = [];
+        try {
+          const raw = localStorage.getItem('gym_clients_fallback_store');
+          localClients = raw ? JSON.parse(raw) : [];
+        } catch (e) {}
+
+        const defaultClients = [
+          { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true },
+          { id: 'client_alina_seed', name: 'Алина', slug: 'alina', active: true }
+        ];
+
+        currentClient = localClients.find(c => (c.slug && c.slug.toLowerCase() === clientSlug.toLowerCase()) || (c.name && c.name.toLowerCase() === clientSlug.toLowerCase()))
+          || defaultClients.find(c => c.slug.toLowerCase() === clientSlug.toLowerCase());
+
+        if (!currentClient) {
+          // Показываем экран "Клиент не найден"
+          const returnUrl = `${window.location.origin}${window.location.pathname}?client=dasha`;
           document.body.innerHTML = `
             <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 20px; text-align: center;">
               <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px;">
@@ -1620,17 +1633,42 @@
               </div>
               <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Клиент не найден</h1>
               <p style="font-size: 0.95rem; color: #94a3b8; max-width: 400px; line-height: 1.5; margin-bottom: 24px;">
-                По адресу <code>/client/${escapeHtml(clientSlug)}</code> клиент не зарегистрирован. Проверьте правильность ссылки или обратитесь к тренеру.
+                Клиент «${escapeHtml(clientSlug)}» не найден. Проверьте правильность ссылки или обратитесь к тренеру.
               </p>
-              <a href="/client/dasha" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
+              <a href="${returnUrl}" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
                 Перейти в кабинет Даши →
               </a>
             </div>
           `;
           return;
         }
-      } catch (err) {
-        console.warn('Сервер недоступен, fallback режим:', err);
+      } else {
+        try {
+          const res = await fetch(`/api/client-info/${encodeURIComponent(clientSlug)}`);
+          if (res.ok) {
+            const data = await res.json();
+            currentClient = data.client;
+          } else {
+            // Клиент не найден по указанному адресу
+            document.body.innerHTML = `
+              <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 20px; text-align: center;">
+                <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px;">
+                  🔍
+                </div>
+                <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Клиент не найден</h1>
+                <p style="font-size: 0.95rem; color: #94a3b8; max-width: 400px; line-height: 1.5; margin-bottom: 24px;">
+                  По адресу <code>/client/${escapeHtml(clientSlug)}</code> клиент не зарегистрирован. Проверьте правильность ссылки или обратитесь к тренеру.
+                </p>
+                <a href="/client/dasha" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
+                  Перейти в кабинет Даши →
+                </a>
+              </div>
+            `;
+            return;
+          }
+        } catch (err) {
+          console.warn('Сервер недоступен, fallback режим:', err);
+        }
       }
     }
 
