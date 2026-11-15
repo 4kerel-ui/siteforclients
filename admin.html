@@ -869,7 +869,7 @@
         .replace(/"/g, '&quot;');
     }
 
-    // Загрузка и рендеринг списка клиентов через API (использует getAllClients на сервере)
+    // Загрузка и рендеринг списка клиентов (с поддержкой GitHub Pages fallback)
     async function loadClients() {
       const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
       if (!token) return;
@@ -881,98 +881,116 @@
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!res.ok) {
-          clientsContainer.innerHTML = '<div class="empty-state">Ошибка загрузки списка клиентов</div>';
+        if (res.ok) {
+          const data = await res.json();
+          renderClientsList(data.clients || []);
           return;
         }
+      } catch (err) {
+        // Fallback для статического GitHub Pages (без Node.js бэкенда)
+      }
 
-        const data = await res.json();
-        const clients = data.clients || [];
+      // Если бэкенд недоступен (GitHub Pages), читаем из localStorage или дефолтных клиентов
+      let localClients = [];
+      try {
+        const raw = localStorage.getItem('gym_clients_fallback_store');
+        localClients = raw ? JSON.parse(raw) : [
+          { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' },
+          { id: 'client_alina_seed', name: 'Алина', slug: 'alina', active: true, createdAt: '2026-11-15T15:35:54.000Z' }
+        ];
+      } catch (e) {
+        localClients = [
+          { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' }
+        ];
+      }
+      renderClientsList(localClients);
+    }
 
-        if (clients.length === 0) {
-          clientsContainer.innerHTML = '<div class="empty-state">Список клиентов пуст</div>';
-          return;
-        }
+    function renderClientsList(clients) {
+      if (!clients || clients.length === 0) {
+        clientsContainer.innerHTML = '<div class="empty-state">Список клиентов пуст</div>';
+        return;
+      }
 
-        // Рендерим аккуратные адаптивные карточки
-        clientsContainer.innerHTML = clients.map(client => {
-          const clientUrl = `${window.location.origin}/client/${client.slug}`;
-          return `
-            <div class="client-card" data-client-id="${escapeHtml(client.id)}" data-client-name="${escapeHtml(client.name)}">
-              <div class="client-card-left">
-                <div class="client-avatar">🏋️‍♀️</div>
-                <div class="client-info-names">
-                  <span class="client-name">${escapeHtml(client.name)}</span>
-                  <span class="client-active-pill">
-                    <span style="font-size: 0.6rem;">●</span>
-                    <span>${client.active ? 'Активен' : 'Неактивен'}</span>
-                  </span>
-                </div>
-              </div>
-              <div class="client-card-right">
-                <button 
-                  type="button" 
-                  class="btn-copy-link" 
-                  data-url="${escapeHtml(clientUrl)}"
-                  title="Скопировать ссылку для клиента"
-                >
-                  <span>🔗</span>
-                  <span class="copy-label">Ссылка</span>
-                </button>
-                <button type="button" class="btn-open-client" title="Открыть карточку клиента">
-                  <span>Открыть</span>
-                  <span>→</span>
-                </button>
+      const isGhPages = window.location.hostname.includes('github.io');
+      const basePath = isGhPages ? '/siteforclients/client.html?client=' : '/client/';
+
+      clientsContainer.innerHTML = clients.map(client => {
+        const clientUrl = isGhPages 
+          ? `${window.location.origin}/siteforclients/client.html?client=${client.slug}`
+          : `${window.location.origin}/client/${client.slug}`;
+
+        return `
+          <div class="client-card" data-client-id="${escapeHtml(client.id)}" data-client-name="${escapeHtml(client.name)}">
+            <div class="client-card-left">
+              <div class="client-avatar">🏋️‍♀️</div>
+              <div class="client-info-names">
+                <span class="client-name">${escapeHtml(client.name)}</span>
+                <span class="client-active-pill">
+                  <span style="font-size: 0.6rem;">●</span>
+                  <span>${client.active ? 'Активен' : 'Неактивен'}</span>
+                </span>
               </div>
             </div>
-          `;
-        }).join('');
+            <div class="client-card-right">
+              <button 
+                type="button" 
+                class="btn-copy-link" 
+                data-url="${escapeHtml(clientUrl)}"
+                title="Скопировать ссылку для клиента"
+              >
+                <span>🔗</span>
+                <span class="copy-label">Ссылка</span>
+              </button>
+              <button type="button" class="btn-open-client" title="Открыть карточку клиента">
+                <span>Открыть</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
 
-        // Кнопка копирования персональной ссылки клиента
-        clientsContainer.querySelectorAll('.btn-copy-link').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            e.stopPropagation(); // Исключаем клик по всей карточке
-            const url = btn.getAttribute('data-url');
-            if (!url) return;
+      // Кнопка копирования персональной ссылки клиента
+      clientsContainer.querySelectorAll('.btn-copy-link').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const url = btn.getAttribute('data-url');
+          if (!url) return;
 
-            try {
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(url);
-              } else {
-                // Fallback для старых окружений
-                const tmp = document.createElement('textarea');
-                tmp.value = url;
-                document.body.appendChild(tmp);
-                tmp.select();
-                document.execCommand('copy');
-                document.body.removeChild(tmp);
-              }
-
-              const label = btn.querySelector('.copy-label');
-              btn.classList.add('copied');
-              label.textContent = 'Скопировано!';
-              setTimeout(() => {
-                btn.classList.remove('copied');
-                label.textContent = 'Ссылка';
-              }, 2000);
-            } catch (err) {
-              alert(`Ссылка клиента: ${url}`);
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(url);
+            } else {
+              const tmp = document.createElement('textarea');
+              tmp.value = url;
+              document.body.appendChild(tmp);
+              tmp.select();
+              document.execCommand('copy');
+              document.body.removeChild(tmp);
             }
-          });
-        });
 
-        // Нажатие на карточку клиента открывает страницу-заглушку с его именем
-        clientsContainer.querySelectorAll('.client-card').forEach(card => {
-          card.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-copy-link')) return;
-            const name = card.getAttribute('data-client-name') || 'Клиент';
-            openClientDetails(name);
-          });
+            const label = btn.querySelector('.copy-label');
+            btn.classList.add('copied');
+            label.textContent = 'Скопировано!';
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              label.textContent = 'Ссылка';
+            }, 2000);
+          } catch (err) {
+            alert(`Ссылка клиента: ${url}`);
+          }
         });
+      });
 
-      } catch (err) {
-        clientsContainer.innerHTML = '<div class="empty-state">Не удалось связаться с сервером</div>';
-      }
+      // Нажатие на карточку клиента открывает страницу-заглушку с его именем
+      clientsContainer.querySelectorAll('.client-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-copy-link')) return;
+          const name = card.getAttribute('data-client-name') || 'Клиент';
+          openClientDetails(name);
+        });
+      });
     }
 
     // Открытие страницы-заглушки клиента
@@ -1046,7 +1064,7 @@
 
     const btnSubmitCreateModal = document.getElementById('btn-submit-create-modal');
 
-    // Сохранение нового клиента в общее хранилище
+    // Сохранение нового клиента в общее хранилище (с поддержкой GitHub Pages)
     createClientForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const trimmedName = newClientInput.value.trim();
@@ -1062,7 +1080,6 @@
         return;
       }
 
-      // Блокируем кнопку на время запроса для исключения дубликатов при повторном клике
       btnSubmitCreateModal.disabled = true;
       btnSubmitCreateModal.textContent = 'Сохранение...';
       hideNameError();
@@ -1080,15 +1097,43 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
-          // Успешно сохранено: закрываем модальное окно и обновляем список
           closeCreateModal();
           await loadClients();
+          return;
         } else {
-          // Выводим ошибку от сервера (например, дубликат имени)
           showNameError(data.message || 'Ошибка при сохранении клиента');
+          return;
         }
       } catch (err) {
-        showNameError('Не удалось связаться с сервером. Попробуйте еще раз.');
+        // Fallback для GitHub Pages (сохраняем в localStorage)
+        let list = [];
+        try {
+          const raw = localStorage.getItem('gym_clients_fallback_store');
+          list = raw ? JSON.parse(raw) : [
+            { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' }
+          ];
+        } catch (e) {
+          list = [{ id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' }];
+        }
+
+        if (list.some(c => c.name.toLowerCase() === trimmedName.toLowerCase())) {
+          showNameError(`Клиент с именем «${trimmedName}» уже существует`);
+          return;
+        }
+
+        const newSlug = trimmedName.toLowerCase().replace(/[^a-zа-я0-9_-]/gi, '').replace(/\s+/g, '-');
+        const newClient = {
+          id: 'client_' + Date.now(),
+          name: trimmedName,
+          slug: newSlug || 'client-' + Date.now(),
+          active: true,
+          createdAt: new Date().toISOString()
+        };
+        list.push(newClient);
+        localStorage.setItem('gym_clients_fallback_store', JSON.stringify(list));
+
+        closeCreateModal();
+        await loadClients();
       } finally {
         btnSubmitCreateModal.disabled = false;
         btnSubmitCreateModal.textContent = 'Создать';
@@ -1161,7 +1206,7 @@
       }
     }
 
-    // 5. Обработка формы входа
+    // 5. Обработка формы входа (с поддержкой GitHub Pages)
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const password = passInput.value.trim();
@@ -1181,14 +1226,23 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
-          // Сохраняем сессионный токен в sessionStorage (сессия браузера)
           sessionStorage.setItem(SESSION_KEY, data.token);
           showDashboard();
+          return;
         } else {
           showError(data.message || 'Неверный пароль администратора');
+          return;
         }
       } catch (err) {
-        showError('Ошибка связи с сервером. Попробуйте еще раз.');
+        // Fallback для GitHub Pages (где нет бэкенда Node.js)
+        if (password === '8950') {
+          sessionStorage.setItem(SESSION_KEY, 'gh_pages_session_' + Date.now());
+          showDashboard();
+          return;
+        } else {
+          showError('Неверный пароль администратора');
+          return;
+        }
       } finally {
         btnLogin.disabled = false;
         btnLogin.textContent = 'Войти в панель';
