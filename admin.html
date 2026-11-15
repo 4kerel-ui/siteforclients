@@ -598,6 +598,91 @@
       border: 1px dashed rgba(255, 255, 255, 0.1);
     }
 
+    /* Карточки очереди тренировок клиента (Этап 5.7) */
+    .queue-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .queue-card-item {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      transition: all 0.15s ease;
+    }
+
+    .queue-card-item:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .queue-card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .queue-order-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .queue-info-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .queue-card-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-card-meta {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .queue-status-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     /* Модальное окно редактора тренировок (большое окно) */
     .editor-modal-card {
       width: 100%;
@@ -1753,7 +1838,7 @@
             <span>Предпросмотр</span>
           </button>
           <button type="button" class="btn-modal-submit" id="btn-editor-save">
-            Сохранить
+            Сохранить в очередь
           </button>
         </div>
       </form>
@@ -1961,6 +2046,111 @@
     // Текущий выбранный в панели клиент
     let currentSelectedClient = null;
 
+    // Слот отображения очереди клиента
+    const queueContentSlot = document.getElementById('queue-content-slot');
+
+    /**
+     * Загрузка и отображение очереди тренировок выбранного клиента (Этап 5.7)
+     */
+    async function loadClientQueue(client) {
+      if (!client || !client.id) return;
+      if (!queueContentSlot) return;
+
+      queueContentSlot.innerHTML = '<div style="padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Загрузка очереди тренировок...</div>';
+
+      let workouts = [];
+
+      try {
+        const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}/workouts`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          workouts = Array.isArray(data.workouts) ? data.workouts : [];
+        } else {
+          throw new Error('API server unavailable');
+        }
+      } catch (err) {
+        // Fallback для GitHub Pages и офлайн режима
+        try {
+          const localKey = `gym_workouts_client_${client.id}`;
+          const raw = localStorage.getItem(localKey);
+          workouts = raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          workouts = [];
+        }
+      }
+
+      renderClientQueue(workouts);
+    }
+
+    /**
+     * Отрисовка списка тренировок в очереди
+     */
+    function renderClientQueue(workouts) {
+      if (!queueContentSlot) return;
+
+      if (!Array.isArray(workouts) || workouts.length === 0) {
+        queueContentSlot.className = 'queue-empty-box';
+        queueContentSlot.innerHTML = 'В очереди пока нет тренировок. Нажмите «Добавить тренировку», чтобы назначить новое занятие.';
+        return;
+      }
+
+      queueContentSlot.className = 'queue-items-list';
+
+      const months = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+      queueContentSlot.innerHTML = workouts.map((w, index) => {
+        const orderNum = index + 1;
+        const blocksCount = Array.isArray(w.content) ? w.content.length : 0;
+        let exercisesCount = 0;
+        if (Array.isArray(w.content)) {
+          w.content.forEach(b => {
+            exercisesCount += (Array.isArray(b.exercises) ? b.exercises.length : 0);
+          });
+        }
+
+        let dateStr = '';
+        if (w.createdAt) {
+          try {
+            const d = new Date(w.createdAt);
+            const day = d.getDate();
+            const month = months[d.getMonth() + 1] || '';
+            const year = d.getFullYear();
+            dateStr = ` • Добавлена ${day} ${month} ${year}`;
+          } catch (e) {}
+        }
+
+        const isCompleted = w.status === 'completed';
+        const isStarted = w.status === 'started';
+        const statusBadgeHtml = isCompleted
+          ? `<span class="queue-status-pill" style="color: #10b981; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3);">✓ Выполнена</span>`
+          : isStarted
+          ? `<span class="queue-status-pill" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3);">⚡ В процессе</span>`
+          : `<span class="queue-status-pill">Ожидает выполнения</span>`;
+
+        return `
+          <div class="queue-card-item" data-workout-id="${escapeHtml(w.id || '')}">
+            <div class="queue-card-left">
+              <div class="queue-order-badge">#${orderNum}</div>
+              <div class="queue-info-wrap">
+                <div class="queue-card-title">${escapeHtml(w.title || 'Тренировка')}</div>
+                <div class="queue-card-meta">
+                  <span>${blocksCount} ${blocksCount === 1 ? 'блок' : (blocksCount < 5 ? 'блока' : 'блоков')}</span>
+                  <span>•</span>
+                  <span>${exercisesCount} упр.</span>
+                  <span>${dateStr}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              ${statusBadgeHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     // Открытие страницы управления выбранным клиентом
     function openClientDetails(client) {
       currentSelectedClient = client;
@@ -1974,6 +2164,9 @@
 
       detailClientLink.textContent = `${clientUrl} ↗`;
       detailClientLink.href = clientUrl;
+
+      // Загружаем очередь тренировок данного клиента
+      loadClientQueue(client);
 
       viewClientsList.style.display = 'none';
       viewClientDetails.style.display = 'flex';
@@ -2988,20 +3181,138 @@
 
     editorWorkoutTitleInput.addEventListener('input', hideEditorError);
 
-    // Интерфейс кнопки "Сохранить" (пока валидация этапа 5.2)
-    btnEditorSave.addEventListener('click', () => {
+    // ----------------------------------------------------
+    // Сохранение созданной тренировки в очередь клиента (Этап 5.7)
+    // ----------------------------------------------------
+    let isSavingWorkout = false;
+
+    async function handleSaveWorkoutToQueue() {
+      // Защита от дубликатов при повторном нажатии
+      if (isSavingWorkout) return;
+
       const title = editorWorkoutTitleInput.value.trim();
+
+      // 1. Проверка названия тренировки
       if (!title) {
         showEditorError('Пожалуйста, укажите название тренировки');
         return;
       }
-      if (editorBlocks.length === 0) {
-        alert('Добавьте хотя бы одно упражнение в тренировку!');
+
+      // 2. Проверка наличия хотя бы одного блока
+      if (!editorBlocks || editorBlocks.length === 0) {
+        alert('Добавьте хотя бы один блок упражнений в тренировку перед сохранением.');
         return;
       }
-      alert(`Тренировка «${title}» содержит ${editorBlocks.length} блок(а). Сохранение в очередь будет подключено на этапе 5.4.`);
-      closeWorkoutEditor();
-    });
+
+      // Проверка выбранного клиента
+      if (!currentSelectedClient || !currentSelectedClient.id) {
+        alert('Ошибка: клиент не выбран. Вернитесь к списку клиентов и выберите клиента повторно.');
+        return;
+      }
+
+      const clientId = currentSelectedClient.id;
+
+      // 3. Формирование уникального ID тренировки
+      const workoutId = `workout_${clientId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+      // 4-9. Конвертация и сбор всех блоков, упражнений, их порядка, комментариев, отметок видео и ссылок
+      const workoutContent = buildClientContentFromEditor();
+
+      // 10. Формирование объекта тренировки со статусом "Ожидает выполнения" (planned)
+      const newWorkout = {
+        id: workoutId,
+        clientId: clientId,
+        clientSlug: currentSelectedClient.slug || '',
+        title: title,
+        scheduledDate: new Date().toISOString().split('T')[0],
+        status: 'planned', // Статус "Ожидает выполнения"
+        startedAt: null,
+        completedAt: null,
+        content: workoutContent, // Сохранение порядка, блоков, комментариев, needVideo, mediaUrl
+        createdAt: new Date().toISOString()
+      };
+
+      // Блокируем кнопку на время сохранения
+      isSavingWorkout = true;
+      const originalBtnText = btnEditorSave.textContent;
+      btnEditorSave.disabled = true;
+      btnEditorSave.textContent = 'Сохранение...';
+
+      try {
+        let savedSuccessfully = false;
+
+        // Попытка сохранить через серверный API
+        try {
+          const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+          const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          };
+
+          const res = await fetch(`/api/clients/${encodeURIComponent(clientId)}/workouts`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(newWorkout)
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              savedSuccessfully = true;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('[Admin] API недоступен, переключаемся на локальное хранилище:', apiErr);
+        }
+
+        // Сохранение в локальное хранилище (fallback для GitHub Pages и синхронизация)
+        const localKey = `gym_workouts_client_${clientId}`;
+        let localQueue = [];
+        try {
+          const raw = localStorage.getItem(localKey);
+          localQueue = raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          localQueue = [];
+        }
+
+        // Проверяем на дубликат по ID перед добавлением в локальную очередь
+        if (!localQueue.some(w => w.id === newWorkout.id)) {
+          localQueue.push(newWorkout);
+          localStorage.setItem(localKey, JSON.stringify(localQueue));
+        }
+
+        // Если это Даша (dasha), также синхронизируем с общим клиентским хранилищем gym_workouts_store_v1
+        if (currentSelectedClient.slug === 'dasha' || currentSelectedClient.name === 'Даша') {
+          try {
+            const mainStoreKey = 'gym_workouts_store_v1';
+            const rawMain = localStorage.getItem(mainStoreKey);
+            let mainStore = rawMain ? JSON.parse(rawMain) : {};
+            mainStore[newWorkout.id] = newWorkout;
+            localStorage.setItem(mainStoreKey, JSON.stringify(mainStore));
+          } catch (e) {}
+        }
+
+        // 11. Закрытие редактора, сброс формы и обновление очереди
+        closeWorkoutEditor();
+        editorBlocks = [];
+        renderEditorBlocks();
+
+        // Обновляем очередь тренировок в административной панели
+        await loadClientQueue(currentSelectedClient);
+
+      } catch (err) {
+        // При ошибке данные не теряются: форма не закрывается и не очищается
+        console.error('[Admin] Ошибка сохранения тренировки:', err);
+        alert('Не удалось сохранить тренировку. Проверьте соединение и повторите попытку.');
+      } finally {
+        isSavingWorkout = false;
+        btnEditorSave.disabled = false;
+        btnEditorSave.textContent = originalBtnText;
+      }
+    }
+
+    // Привязываем обработчик сохранения к кнопке "Сохранить в очередь"
+    btnEditorSave.addEventListener('click', handleSaveWorkoutToQueue);
 
     // 1. Показать / скрыть пароль
     btnTogglePass.addEventListener('click', () => {
