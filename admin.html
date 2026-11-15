@@ -669,6 +669,39 @@
       flex-wrap: wrap;
     }
 
+    .queue-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-queue-edit, .btn-queue-delete {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-queue-edit:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--accent);
+    }
+
+    .btn-queue-delete:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
     .queue-status-pill {
       font-size: 0.72rem;
       font-weight: 700;
@@ -2129,6 +2162,20 @@
           ? `<span class="queue-status-pill" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3);">⚡ В процессе</span>`
           : `<span class="queue-status-pill">Ожидает выполнения</span>`;
 
+        // Кнопки действий: только для ещё не начатых клиентом тренировок (status === 'planned')
+        const actionsHtml = (!isCompleted && !isStarted) ? `
+          <div class="queue-card-actions">
+            <button type="button" class="btn-queue-edit" data-edit-id="${escapeHtml(w.id || '')}" title="Редактировать тренировку">
+              <span>✏️</span>
+              <span>Редактировать</span>
+            </button>
+            <button type="button" class="btn-queue-delete" data-delete-id="${escapeHtml(w.id || '')}" title="Удалить тренировку">
+              <span>🗑</span>
+              <span>Удалить</span>
+            </button>
+          </div>
+        ` : '';
+
         return `
           <div class="queue-card-item" data-workout-id="${escapeHtml(w.id || '')}">
             <div class="queue-card-left">
@@ -2143,12 +2190,61 @@
                 </div>
               </div>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
               ${statusBadgeHtml}
+              ${actionsHtml}
             </div>
           </div>
         `;
       }).join('');
+
+      // Привязка обработчиков для кнопок "Редактировать"
+      queueContentSlot.querySelectorAll('.btn-queue-edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const wId = btn.getAttribute('data-edit-id');
+          const targetWorkout = workouts.find(w => w.id === wId);
+          if (!targetWorkout) return;
+
+          // Ограничение: проверка статуса
+          if (targetWorkout.status === 'completed') {
+            alert('Не разрешается редактировать завершённые тренировки.');
+            return;
+          }
+          if (targetWorkout.status === 'started') {
+            alert('Нельзя редактировать тренировку, которую клиент уже начал выполнять.');
+            return;
+          }
+
+          openWorkoutEditor(targetWorkout);
+        });
+      });
+
+      // Привязка обработчиков для кнопок "Удалить"
+      queueContentSlot.querySelectorAll('.btn-queue-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const wId = btn.getAttribute('data-delete-id');
+          const targetWorkout = workouts.find(w => w.id === wId);
+          if (!targetWorkout) return;
+
+          // Ограничения
+          if (targetWorkout.status === 'completed') {
+            alert('Не разрешается удалять завершённые тренировки из истории.');
+            return;
+          }
+          if (targetWorkout.status === 'started') {
+            alert('Нельзя удалять тренировку, которую клиент уже выполняет.');
+            return;
+          }
+
+          // Подтверждение действия
+          const confirmed = confirm(`Вы уверены, что хотите удалить тренировку «${targetWorkout.title || 'Без названия'}» из очереди?`);
+          if (!confirmed) return;
+
+          await handleDeleteWorkoutFromQueue(targetWorkout.id);
+        });
+      });
     }
 
     // Открытие страницы управления выбранным клиентом
@@ -2336,16 +2432,38 @@
 
     // Локальный массив блоков текущей редактируемой тренировки
     let editorBlocks = [];
+    // Режим редактирования: ID редактируемой тренировки (null, если создается новая)
+    let currentEditingWorkoutId = null;
+    const editorModalTitle = document.getElementById('editor-modal-title');
 
-    function openWorkoutEditor() {
+    function openWorkoutEditor(workoutToEdit = null) {
       const clientName = currentSelectedClient?.name || detailClientName.textContent || 'Клиент';
       editorTargetClientName.textContent = clientName;
 
-      editorWorkoutTitleInput.value = '';
       hideEditorError();
 
-      // Очищаем блоки при первичном открытии
-      editorBlocks = [];
+      if (workoutToEdit) {
+        // Режим редактирования существующей тренировки
+        currentEditingWorkoutId = workoutToEdit.id;
+        if (editorModalTitle) {
+          editorModalTitle.innerHTML = '<span>✏️</span><span>Редактирование тренировки</span>';
+        }
+        btnEditorSave.textContent = 'Сохранить изменения';
+        editorWorkoutTitleInput.value = workoutToEdit.title || '';
+
+        // Восстановление структуры блоков из workoutToEdit.content
+        editorBlocks = convertClientContentToEditorBlocks(workoutToEdit.content);
+      } else {
+        // Режим создания новой тренировки
+        currentEditingWorkoutId = null;
+        if (editorModalTitle) {
+          editorModalTitle.innerHTML = '<span>🏋️</span><span>Новая тренировка</span>';
+        }
+        btnEditorSave.textContent = 'Сохранить в очередь';
+        editorWorkoutTitleInput.value = '';
+        editorBlocks = [];
+      }
+
       renderEditorBlocks();
 
       workoutEditorModal.classList.add('active');
@@ -2353,10 +2471,88 @@
       setTimeout(() => editorWorkoutTitleInput.focus(), 60);
     }
 
+    /**
+     * Конвертация клиентской структуры content в массив editorBlocks
+     */
+    function convertClientContentToEditorBlocks(content) {
+      if (!Array.isArray(content)) return [];
+
+      return content.map((item, idx) => {
+        const exercises = Array.isArray(item.exercises) ? item.exercises : [];
+        const isSuperset = exercises.length > 1 || (item.setTitle && item.setTitle.toLowerCase().includes('суперсет'));
+
+        if (isSuperset) {
+          return {
+            id: item.setId || 'block_super_' + Date.now() + '_' + idx,
+            type: 'superset',
+            blockTitle: item.setTitle || `Суперсет ${String.fromCharCode(65 + idx)}`,
+            exercises: exercises.map((ex, exIdx) => {
+              const parsed = parseExerciseScheme(ex.scheme || '');
+              return {
+                id: ex.id || 'ex_' + Date.now() + '_' + idx + '_' + exIdx,
+                name: ex.name || '',
+                sets: parsed.sets,
+                reps: parsed.reps,
+                weight: parsed.weight,
+                notes: ex.notes || '',
+                needVideo: Boolean(ex.needVideo),
+                mediaUrl: ex.mediaUrl || ''
+              };
+            })
+          };
+        } else {
+          const ex = exercises[0] || {};
+          const parsed = parseExerciseScheme(ex.scheme || '');
+          return {
+            id: item.setId || 'block_' + Date.now() + '_' + idx,
+            type: 'single',
+            blockTitle: item.setTitle || `Блок ${idx + 1}`,
+            exerciseName: ex.name || '',
+            sets: parsed.sets,
+            reps: parsed.reps,
+            weight: parsed.weight,
+            notes: ex.notes || '',
+            needVideo: Boolean(ex.needVideo),
+            mediaUrl: ex.mediaUrl || ''
+          };
+        }
+      });
+    }
+
+    /**
+     * Парсинг строки схемы: "3 × 12 (20 кг)" -> { sets: 3, reps: '12', weight: '20 кг' }
+     */
+    function parseExerciseScheme(schemeStr) {
+      if (!schemeStr) return { sets: 3, reps: '12', weight: '' };
+      let weight = '';
+      let remaining = schemeStr;
+
+      const weightMatch = schemeStr.match(/\(([^)]+)\)/);
+      if (weightMatch) {
+        weight = weightMatch[1].trim();
+        remaining = schemeStr.replace(weightMatch[0], '').trim();
+      }
+
+      const parts = remaining.split(/×|x/i);
+      let sets = 3;
+      let reps = '12';
+
+      if (parts.length >= 2) {
+        const parsedSets = parseInt(parts[0].trim(), 10);
+        if (!isNaN(parsedSets)) sets = parsedSets;
+        reps = parts[1].trim();
+      } else if (remaining.trim()) {
+        reps = remaining.trim();
+      }
+
+      return { sets, reps, weight };
+    }
+
     function closeWorkoutEditor() {
       workoutEditorModal.classList.remove('active');
       workoutEditorModal.setAttribute('aria-hidden', 'true');
       editorWorkoutTitleInput.value = '';
+      currentEditingWorkoutId = null;
       hideEditorError();
       closeChoiceModal();
     }
@@ -3182,7 +3378,7 @@
     editorWorkoutTitleInput.addEventListener('input', hideEditorError);
 
     // ----------------------------------------------------
-    // Сохранение созданной тренировки в очередь клиента (Этап 5.7)
+    // Сохранение и редактирование тренировки в очереди клиента (Этап 5.7 & 5.8)
     // ----------------------------------------------------
     let isSavingWorkout = false;
 
@@ -3212,14 +3408,17 @@
 
       const clientId = currentSelectedClient.id;
 
-      // 3. Формирование уникального ID тренировки
-      const workoutId = `workout_${clientId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      // 3. Формирование или сохранение существующего ID тренировки (Этап 5.8)
+      const isEditing = Boolean(currentEditingWorkoutId);
+      const workoutId = isEditing
+        ? currentEditingWorkoutId
+        : `workout_${clientId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
       // 4-9. Конвертация и сбор всех блоков, упражнений, их порядка, комментариев, отметок видео и ссылок
       const workoutContent = buildClientContentFromEditor();
 
-      // 10. Формирование объекта тренировки со статусом "Ожидает выполнения" (planned)
-      const newWorkout = {
+      // 10. Формирование объекта тренировки
+      const workoutData = {
         id: workoutId,
         clientId: clientId,
         clientSlug: currentSelectedClient.slug || '',
@@ -3236,7 +3435,7 @@
       isSavingWorkout = true;
       const originalBtnText = btnEditorSave.textContent;
       btnEditorSave.disabled = true;
-      btnEditorSave.textContent = 'Сохранение...';
+      btnEditorSave.textContent = isEditing ? 'Обновление...' : 'Сохранение...';
 
       try {
         let savedSuccessfully = false;
@@ -3249,16 +3448,31 @@
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           };
 
-          const res = await fetch(`/api/clients/${encodeURIComponent(clientId)}/workouts`, {
-            method: 'POST',
+          const endpoint = isEditing
+            ? `/api/clients/${encodeURIComponent(clientId)}/workouts/${encodeURIComponent(workoutId)}`
+            : `/api/clients/${encodeURIComponent(clientId)}/workouts`;
+
+          const method = isEditing ? 'PUT' : 'POST';
+
+          const res = await fetch(endpoint, {
+            method: method,
             headers,
-            body: JSON.stringify(newWorkout)
+            body: JSON.stringify(workoutData)
           });
 
           if (res.ok) {
             const data = await res.json();
             if (data.success) {
               savedSuccessfully = true;
+            }
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            if (res.status === 403) {
+              alert(errData.message || 'Запрещено редактировать тренировку.');
+              isSavingWorkout = false;
+              btnEditorSave.disabled = false;
+              btnEditorSave.textContent = originalBtnText;
+              return;
             }
           }
         } catch (apiErr) {
@@ -3275,11 +3489,20 @@
           localQueue = [];
         }
 
-        // Проверяем на дубликат по ID перед добавлением в локальную очередь
-        if (!localQueue.some(w => w.id === newWorkout.id)) {
-          localQueue.push(newWorkout);
-          localStorage.setItem(localKey, JSON.stringify(localQueue));
+        if (isEditing) {
+          const idx = localQueue.findIndex(w => w.id === workoutId);
+          if (idx !== -1) {
+            localQueue[idx] = { ...localQueue[idx], ...workoutData, updatedAt: new Date().toISOString() };
+          } else {
+            localQueue.push(workoutData);
+          }
+        } else {
+          // Проверяем на дубликат по ID перед добавлением
+          if (!localQueue.some(w => w.id === workoutData.id)) {
+            localQueue.push(workoutData);
+          }
         }
+        localStorage.setItem(localKey, JSON.stringify(localQueue));
 
         // Если это Даша (dasha), также синхронизируем с общим клиентским хранилищем gym_workouts_store_v1
         if (currentSelectedClient.slug === 'dasha' || currentSelectedClient.name === 'Даша') {
@@ -3287,7 +3510,7 @@
             const mainStoreKey = 'gym_workouts_store_v1';
             const rawMain = localStorage.getItem(mainStoreKey);
             let mainStore = rawMain ? JSON.parse(rawMain) : {};
-            mainStore[newWorkout.id] = newWorkout;
+            mainStore[workoutData.id] = { ...(mainStore[workoutData.id] || {}), ...workoutData };
             localStorage.setItem(mainStoreKey, JSON.stringify(mainStore));
           } catch (e) {}
         }
@@ -3295,6 +3518,7 @@
         // 11. Закрытие редактора, сброс формы и обновление очереди
         closeWorkoutEditor();
         editorBlocks = [];
+        currentEditingWorkoutId = null;
         renderEditorBlocks();
 
         // Обновляем очередь тренировок в административной панели
@@ -3308,6 +3532,66 @@
         isSavingWorkout = false;
         btnEditorSave.disabled = false;
         btnEditorSave.textContent = originalBtnText;
+      }
+    }
+
+    /**
+     * Удаление тренировки из очереди клиента (Этап 5.8)
+     */
+    async function handleDeleteWorkoutFromQueue(workoutId) {
+      if (!currentSelectedClient || !currentSelectedClient.id) return;
+      const clientId = currentSelectedClient.id;
+
+      try {
+        // 1. Попытка удаления через серверный API
+        try {
+          const token = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+          const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+          const res = await fetch(`/api/clients/${encodeURIComponent(clientId)}/workouts/${encodeURIComponent(workoutId)}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            if (res.status === 403) {
+              alert(errData.message || 'Не разрешено удалять данную тренировку.');
+              return;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('[Admin] API недоступен при удалении:', apiErr);
+        }
+
+        // 2. Удаление из локального хранилища (localStorage)
+        const localKey = `gym_workouts_client_${clientId}`;
+        try {
+          const raw = localStorage.getItem(localKey);
+          let localQueue = raw ? JSON.parse(raw) : [];
+          localQueue = localQueue.filter(w => w.id !== workoutId);
+          localStorage.setItem(localKey, JSON.stringify(localQueue));
+        } catch (e) {}
+
+        // 3. Если Даша, также удаляем из gym_workouts_store_v1
+        if (currentSelectedClient.slug === 'dasha' || currentSelectedClient.name === 'Даша') {
+          try {
+            const mainStoreKey = 'gym_workouts_store_v1';
+            const rawMain = localStorage.getItem(mainStoreKey);
+            if (rawMain) {
+              let mainStore = JSON.parse(rawMain);
+              delete mainStore[workoutId];
+              localStorage.setItem(mainStoreKey, JSON.stringify(mainStore));
+            }
+          } catch (e) {}
+        }
+
+        // Обновляем отображение очереди
+        await loadClientQueue(currentSelectedClient);
+
+      } catch (err) {
+        console.error('[Admin] Ошибка удаления тренировки:', err);
+        alert('Не удалось удалить тренировку. Попробуйте еще раз.');
       }
     }
 
