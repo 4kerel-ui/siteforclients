@@ -795,6 +795,130 @@
       margin-top: 6px;
     }
 
+    .editor-block-badge.superset {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border-color: rgba(168, 85, 247, 0.35);
+    }
+
+    /* Стили элементов суперсета */
+    .superset-exercises-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .superset-exercise-item {
+      background: rgba(11, 15, 25, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .superset-exercise-item:hover {
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+
+    .superset-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .superset-item-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .superset-order-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-order-move {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .btn-order-move:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.2);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .btn-order-move:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
+    .btn-delete-superset-item {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .btn-delete-superset-item:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .btn-add-exercise-to-superset {
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px dashed rgba(168, 85, 247, 0.35);
+      color: #d8b4fe;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      margin-top: 2px;
+    }
+
+    .btn-add-exercise-to-superset:hover {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: #c084fc;
+      color: #fff;
+    }
+
     .choice-card-btn {
       background: var(--card-inner);
       border: 1px solid var(--card-border);
@@ -1664,9 +1788,10 @@
       addSingleExerciseBlock();
     });
 
-    // Вариант 2: Суперсет (заглушка)
+    // Вариант 2: Добавление суперсета (Этап 5.3)
     btnChooseSuperset.addEventListener('click', () => {
-      alert('Режим суперсета будет добавлен на этапе 5.3!');
+      closeChoiceModal();
+      addSupersetBlock();
     });
 
     function addSingleExerciseBlock() {
@@ -1686,6 +1811,82 @@
       renderEditorBlocks();
     }
 
+    function addSupersetBlock() {
+      const blockIndex = editorBlocks.length + 1;
+      const newBlock = {
+        id: 'block_super_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        type: 'superset',
+        blockTitle: `Суперсет ${String.fromCharCode(64 + blockIndex)}`, // Суперсет A, Суперсет B
+        exercises: [
+          {
+            id: 'ex_' + Date.now() + '_1',
+            name: '',
+            sets: 3,
+            reps: '10',
+            weight: '',
+            notes: ''
+          },
+          {
+            id: 'ex_' + Date.now() + '_2',
+            name: '',
+            sets: 3,
+            reps: '12',
+            weight: '',
+            notes: ''
+          }
+        ]
+      };
+
+      editorBlocks.push(newBlock);
+      renderEditorBlocks();
+    }
+
+    function addExerciseToSuperset(blockId) {
+      const targetBlock = editorBlocks.find(b => b.id === blockId);
+      if (!targetBlock || targetBlock.type !== 'superset') return;
+
+      targetBlock.exercises.push({
+        id: 'ex_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: '',
+        sets: 3,
+        reps: '10-12',
+        weight: '',
+        notes: ''
+      });
+      renderEditorBlocks();
+    }
+
+    function removeExerciseFromSuperset(blockId, exerciseId) {
+      const targetBlock = editorBlocks.find(b => b.id === blockId);
+      if (!targetBlock || targetBlock.type !== 'superset') return;
+
+      if (targetBlock.exercises.length <= 1) {
+        alert('В суперсете должно оставаться минимум одно упражнение (или удалите весь суперсет).');
+        return;
+      }
+
+      targetBlock.exercises = targetBlock.exercises.filter(ex => ex.id !== exerciseId);
+      renderEditorBlocks();
+    }
+
+    function moveExerciseInSuperset(blockId, exerciseId, direction) {
+      const targetBlock = editorBlocks.find(b => b.id === blockId);
+      if (!targetBlock || targetBlock.type !== 'superset') return;
+
+      const idx = targetBlock.exercises.findIndex(ex => ex.id === exerciseId);
+      if (idx === -1) return;
+
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= targetBlock.exercises.length) return;
+
+      // Меняем порядок упражнений местами
+      const temp = targetBlock.exercises[idx];
+      targetBlock.exercises[idx] = targetBlock.exercises[targetIdx];
+      targetBlock.exercises[targetIdx] = temp;
+
+      renderEditorBlocks();
+    }
+
     function removeBlock(blockId) {
       editorBlocks = editorBlocks.filter(b => b.id !== blockId);
       renderEditorBlocks();
@@ -1696,115 +1897,291 @@
         editorBlocksList.innerHTML = `
           <div style="text-align: center; padding: 20px 10px; color: var(--text-muted);">
             <div style="font-size: 1.6rem; margin-bottom: 6px;">🎯</div>
-            <span>Блоки упражнений пока не добавлены. Нажмите «＋ Добавить блок», чтобы добавить упражнение.</span>
+            <span>Блоки упражнений пока не добавлены. Нажмите «＋ Добавить блок», чтобы добавить упражнение или суперсет.</span>
           </div>
         `;
         return;
       }
 
-      editorBlocksList.innerHTML = editorBlocks.map((block, idx) => `
-        <div class="editor-block-card" data-block-id="${escapeHtml(block.id)}">
-          <div class="editor-block-top">
-            <div class="editor-block-title-wrap">
-              <span class="editor-block-badge">Одиночное</span>
-              <input 
-                type="text" 
-                class="editor-block-name-input" 
-                data-field="blockTitle"
-                value="${escapeHtml(block.blockTitle)}" 
-                placeholder="Название блока (например: Блок 1)"
-                title="Нажмите, чтобы изменить название блока"
-              >
-            </div>
-            <button 
-              type="button" 
-              class="btn-delete-block" 
-              data-delete-id="${escapeHtml(block.id)}" 
-              title="Удалить этот блок"
-            >
-              🗑
-            </button>
-          </div>
+      editorBlocksList.innerHTML = editorBlocks.map((block) => {
+        if (block.type === 'single') {
+          return `
+            <div class="editor-block-card" data-block-id="${escapeHtml(block.id)}">
+              <div class="editor-block-top">
+                <div class="editor-block-title-wrap">
+                  <span class="editor-block-badge">Одиночное</span>
+                  <input 
+                    type="text" 
+                    class="editor-block-name-input" 
+                    data-block-field="blockTitle"
+                    value="${escapeHtml(block.blockTitle)}" 
+                    placeholder="Название блока"
+                  >
+                </div>
+                <button type="button" class="btn-delete-block" data-delete-block="${escapeHtml(block.id)}" title="Удалить блок">
+                  🗑
+                </button>
+              </div>
 
-          <!-- 1. Название упражнения -->
-          <div class="editor-field-group">
-            <label class="editor-field-label">Название упражнения</label>
-            <input 
-              type="text" 
-              class="editor-field-input" 
-              data-field="exerciseName"
-              value="${escapeHtml(block.exerciseName)}" 
-              placeholder="Например: Жим гантелей лёжа"
-            >
-          </div>
+              <!-- Поля одиночного упражнения -->
+              <div class="editor-field-group">
+                <label class="editor-field-label">Название упражнения</label>
+                <input 
+                  type="text" 
+                  class="editor-field-input" 
+                  data-single-field="exerciseName"
+                  value="${escapeHtml(block.exerciseName)}" 
+                  placeholder="Например: Жим гантелей лёжа"
+                >
+              </div>
 
-          <!-- 2. Сетка: Подходы, Повторения, Вес -->
-          <div class="editor-fields-grid">
-            <div class="editor-field-group">
-              <label class="editor-field-label">Подходы</label>
-              <input 
-                type="number" 
-                class="editor-field-input" 
-                data-field="sets"
-                value="${escapeHtml(String(block.sets || ''))}" 
-                placeholder="3"
-                min="1"
-              >
-            </div>
-            <div class="editor-field-group">
-              <label class="editor-field-label">Повторения</label>
-              <input 
-                type="text" 
-                class="editor-field-input" 
-                data-field="reps"
-                value="${escapeHtml(block.reps)}" 
-                placeholder="12 или 10-15"
-              >
-            </div>
-            <div class="editor-field-group">
-              <label class="editor-field-label">Рабочий вес</label>
-              <input 
-                type="text" 
-                class="editor-field-input" 
-                data-field="weight"
-                value="${escapeHtml(block.weight)}" 
-                placeholder="20 кг или свой вес"
-              >
-            </div>
-          </div>
+              <div class="editor-fields-grid">
+                <div class="editor-field-group">
+                  <label class="editor-field-label">Подходы</label>
+                  <input 
+                    type="number" 
+                    class="editor-field-input" 
+                    data-single-field="sets"
+                    value="${escapeHtml(String(block.sets || ''))}" 
+                    placeholder="3"
+                    min="1"
+                  >
+                </div>
+                <div class="editor-field-group">
+                  <label class="editor-field-label">Повторения</label>
+                  <input 
+                    type="text" 
+                    class="editor-field-input" 
+                    data-single-field="reps"
+                    value="${escapeHtml(block.reps)}" 
+                    placeholder="12"
+                  >
+                </div>
+                <div class="editor-field-group">
+                  <label class="editor-field-label">Рабочий вес</label>
+                  <input 
+                    type="text" 
+                    class="editor-field-input" 
+                    data-single-field="weight"
+                    value="${escapeHtml(block.weight)}" 
+                    placeholder="20 кг"
+                  >
+                </div>
+              </div>
 
-          <!-- 3. Комментарий тренера -->
-          <div class="editor-field-group">
-            <label class="editor-field-label">Комментарий тренера</label>
-            <input 
-              type="text" 
-              class="editor-field-input" 
-              data-field="notes"
-              value="${escapeHtml(block.notes)}" 
-              placeholder="Например: Контролировать положение лопаток и темп"
-            >
-          </div>
-        </div>
-      `).join('');
+              <div class="editor-field-group">
+                <label class="editor-field-label">Комментарий тренера</label>
+                <input 
+                  type="text" 
+                  class="editor-field-input" 
+                  data-single-field="notes"
+                  value="${escapeHtml(block.notes)}" 
+                  placeholder="Например: Контролировать положение лопаток"
+                >
+              </div>
+            </div>
+          `;
+        }
 
-      // Привязка слушателей изменения полей
+        // Рендеринг БЛОКА СУПЕРСЕТА
+        if (block.type === 'superset') {
+          const exercisesHtml = (block.exercises || []).map((ex, exIdx) => {
+            const isFirst = exIdx === 0;
+            const isLast = exIdx === block.exercises.length - 1;
+            return `
+              <div class="superset-exercise-item" data-exercise-id="${escapeHtml(ex.id)}">
+                <div class="superset-item-top">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="superset-item-num">${exIdx + 1}</span>
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #e9d5ff;">Упражнение ${exIdx + 1}</span>
+                  </div>
+                  <div class="superset-order-actions">
+                    <button 
+                      type="button" 
+                      class="btn-order-move" 
+                      data-move-dir="-1"
+                      ${isFirst ? 'disabled' : ''} 
+                      title="Поднять выше"
+                    >▲</button>
+                    <button 
+                      type="button" 
+                      class="btn-order-move" 
+                      data-move-dir="1"
+                      ${isLast ? 'disabled' : ''} 
+                      title="Опустить ниже"
+                    >▼</button>
+                    <button 
+                      type="button" 
+                      class="btn-delete-superset-item" 
+                      data-delete-ex="${escapeHtml(ex.id)}" 
+                      title="Удалить это упражнение из суперсета"
+                    >×</button>
+                  </div>
+                </div>
+
+                <div class="editor-field-group">
+                  <label class="editor-field-label">Название упражнения</label>
+                  <input 
+                    type="text" 
+                    class="editor-field-input" 
+                    data-ex-field="name"
+                    value="${escapeHtml(ex.name)}" 
+                    placeholder="Например: Подтягивания"
+                  >
+                </div>
+
+                <div class="editor-fields-grid">
+                  <div class="editor-field-group">
+                    <label class="editor-field-label">Подходы</label>
+                    <input 
+                      type="number" 
+                      class="editor-field-input" 
+                      data-ex-field="sets"
+                      value="${escapeHtml(String(ex.sets || ''))}" 
+                      placeholder="3"
+                      min="1"
+                    >
+                  </div>
+                  <div class="editor-field-group">
+                    <label class="editor-field-label">Повторения</label>
+                    <input 
+                      type="text" 
+                      class="editor-field-input" 
+                      data-ex-field="reps"
+                      value="${escapeHtml(ex.reps)}" 
+                      placeholder="10"
+                    >
+                  </div>
+                  <div class="editor-field-group">
+                    <label class="editor-field-label">Рабочий вес</label>
+                    <input 
+                      type="text" 
+                      class="editor-field-input" 
+                      data-ex-field="weight"
+                      value="${escapeHtml(ex.weight)}" 
+                      placeholder="Свой вес / 15 кг"
+                    >
+                  </div>
+                </div>
+
+                <div class="editor-field-group">
+                  <label class="editor-field-label">Комментарий тренера</label>
+                  <input 
+                    type="text" 
+                    class="editor-field-input" 
+                    data-ex-field="notes"
+                    value="${escapeHtml(ex.notes)}" 
+                    placeholder="Например: Полная амплитуда"
+                  >
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <div class="editor-block-card" data-block-id="${escapeHtml(block.id)}" style="border-color: rgba(168, 85, 247, 0.35);">
+              <div class="editor-block-top">
+                <div class="editor-block-title-wrap">
+                  <span class="editor-block-badge superset">⚡ Суперсет</span>
+                  <input 
+                    type="text" 
+                    class="editor-block-name-input" 
+                    data-block-field="blockTitle"
+                    value="${escapeHtml(block.blockTitle)}" 
+                    placeholder="Название суперсета"
+                  >
+                </div>
+                <button type="button" class="btn-delete-block" data-delete-block="${escapeHtml(block.id)}" title="Удалить весь суперсет">
+                  🗑
+                </button>
+              </div>
+
+              <!-- Список упражнений внутри суперсета -->
+              <div class="superset-exercises-container">
+                ${exercisesHtml}
+              </div>
+
+              <!-- Кнопка добавления упражнения в суперсет -->
+              <button type="button" class="btn-add-exercise-to-superset" data-add-to-superset="${escapeHtml(block.id)}">
+                <span>＋ Добавить упражнение в суперсет</span>
+              </button>
+            </div>
+          `;
+        }
+
+        return '';
+      }).join('');
+
+      // Привязка обработчиков внутри отрисованных блоков
       editorBlocksList.querySelectorAll('.editor-block-card').forEach(card => {
         const blockId = card.getAttribute('data-block-id');
         const targetBlock = editorBlocks.find(b => b.id === blockId);
         if (!targetBlock) return;
 
-        card.querySelectorAll('input[data-field]').forEach(input => {
-          input.addEventListener('input', (e) => {
-            const field = e.target.getAttribute('data-field');
-            targetBlock[field] = e.target.value;
+        // Изменение заголовка блока
+        const titleInput = card.querySelector('input[data-block-field="blockTitle"]');
+        if (titleInput) {
+          titleInput.addEventListener('input', (e) => {
+            targetBlock.blockTitle = e.target.value;
           });
-        });
+        }
 
-        // Кнопка удаления блока
-        const btnDelete = card.querySelector('.btn-delete-block');
-        if (btnDelete) {
-          btnDelete.addEventListener('click', () => {
+        // Удаление всего блока
+        const btnDeleteBlock = card.querySelector('button[data-delete-block]');
+        if (btnDeleteBlock) {
+          btnDeleteBlock.addEventListener('click', () => {
             removeBlock(blockId);
+          });
+        }
+
+        // Обработка одиночного упражнения
+        if (targetBlock.type === 'single') {
+          card.querySelectorAll('input[data-single-field]').forEach(input => {
+            input.addEventListener('input', (e) => {
+              const field = e.target.getAttribute('data-single-field');
+              targetBlock[field] = e.target.value;
+            });
+          });
+        }
+
+        // Обработка суперсета
+        if (targetBlock.type === 'superset') {
+          // Кнопка "+ Добавить упражнение в суперсет"
+          const btnAddEx = card.querySelector('button[data-add-to-superset]');
+          if (btnAddEx) {
+            btnAddEx.addEventListener('click', () => {
+              addExerciseToSuperset(blockId);
+            });
+          }
+
+          // Поля каждого упражнения
+          card.querySelectorAll('.superset-exercise-item').forEach(exItem => {
+            const exId = exItem.getAttribute('data-exercise-id');
+            const targetEx = targetBlock.exercises.find(e => e.id === exId);
+            if (!targetEx) return;
+
+            exItem.querySelectorAll('input[data-ex-field]').forEach(input => {
+              input.addEventListener('input', (e) => {
+                const field = e.target.getAttribute('data-ex-field');
+                targetEx[field] = e.target.value;
+              });
+            });
+
+            // Кнопка удаления упражнения
+            const btnDelEx = exItem.querySelector('button[data-delete-ex]');
+            if (btnDelEx) {
+              btnDelEx.addEventListener('click', () => {
+                removeExerciseFromSuperset(blockId, exId);
+              });
+            }
+
+            // Кнопки изменения порядка (▲ / ▼)
+            exItem.querySelectorAll('button[data-move-dir]').forEach(btnMove => {
+              btnMove.addEventListener('click', () => {
+                const dir = parseInt(btnMove.getAttribute('data-move-dir'), 10);
+                moveExerciseInSuperset(blockId, exId, dir);
+              });
+            });
           });
         }
       });
