@@ -251,6 +251,18 @@
         throw new Error(`Тренировка "${id}" не найдена.`);
       }
 
+      // Сохраняем ID завершенной тренировки в постоянный список завершенных
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const raw = window.localStorage.getItem('gym_completed_workout_ids');
+          const ids = raw ? JSON.parse(raw) : [];
+          if (!ids.includes(id)) {
+            ids.push(id);
+            window.localStorage.setItem('gym_completed_workout_ids', JSON.stringify(ids));
+          }
+        }
+      } catch (e) {}
+
       // Идемпотентность: если уже завершена, возвращаем без изменений
       if (workout.status === WorkoutStatus.COMPLETED) {
         return workout;
@@ -288,16 +300,32 @@
       // 1. Сначала применяем автозавершение просроченных тренировок по МСК
       await this.checkAndApplyAutoCompletion();
 
+      let completedIds = [];
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const raw = window.localStorage.getItem('gym_completed_workout_ids');
+          completedIds = raw ? JSON.parse(raw) : [];
+        }
+      } catch (e) {}
+
       let createdCount = 0;
       for (const item of SEED_WORKOUTS) {
+        const isLocallyCompleted = completedIds.includes(item.id);
         const existing = await this.adapter.getById(item.id);
         if (!existing) {
           await this.createWorkout({
             ...item,
+            status: isLocallyCompleted ? WorkoutStatus.COMPLETED : item.status,
+            completedAt: isLocallyCompleted ? (item.completedAt || new Date().toISOString()) : item.completedAt,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
           createdCount++;
+        } else if (isLocallyCompleted && existing.status !== WorkoutStatus.COMPLETED) {
+          await this.adapter.update(item.id, {
+            status: WorkoutStatus.COMPLETED,
+            completedAt: existing.completedAt || new Date().toISOString()
+          });
         } else if (item.status === WorkoutStatus.COMPLETED && existing.status === WorkoutStatus.PLANNED && item.id === 'workout_2026_11_15') {
           // Обновляем архивную тренировку до завершенной, чтобы освободить очередь для новой активной тренировки
           await this.adapter.update(item.id, {
