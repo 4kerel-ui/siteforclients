@@ -203,9 +203,16 @@
      */
     async getCurrentWorkout() {
       const all = await this.adapter.getAll();
-      // Находим первую незавершенную тренировку
-      const current = all.find(w => w.status !== WorkoutStatus.COMPLETED);
-      return current || null;
+      // Находим текущую незавершенную тренировку: сначала начатую (started)
+      const started = all.find(w => w.status === WorkoutStatus.STARTED);
+      if (started) return started;
+      // Затем актуальную запланированную (planned)
+      const planned = all.filter(w => w.status === WorkoutStatus.PLANNED);
+      if (planned.length > 0) {
+        // Возвращаем последнюю назначенную тренировку
+        return planned[planned.length - 1];
+      }
+      return null;
     }
 
     /**
@@ -291,6 +298,12 @@
             updatedAt: new Date().toISOString()
           });
           createdCount++;
+        } else if (item.status === WorkoutStatus.COMPLETED && existing.status === WorkoutStatus.PLANNED && item.id === 'workout_2026_11_15') {
+          // Обновляем архивную тренировку до завершенной, чтобы освободить очередь для новой активной тренировки
+          await this.adapter.update(item.id, {
+            status: WorkoutStatus.COMPLETED,
+            completedAt: item.completedAt || '2026-11-15T16:00:00.000Z'
+          });
         }
       }
       return { seededCount: createdCount };
@@ -345,9 +358,9 @@
     id: 'workout_2026_11_15',
     title: 'Тренировка дня (Индивидуальный план)',
     scheduledDate: '2026-11-15',
-    status: WorkoutStatus.PLANNED,
-    startedAt: null,
-    completedAt: null,
+    status: WorkoutStatus.COMPLETED,
+    startedAt: '2026-11-15T15:00:00.000Z',
+    completedAt: '2026-11-15T16:00:00.000Z',
     content: [
       {
         setTitle: 'Разминочный сет',
@@ -562,8 +575,59 @@
         }
       ]
     },
-    // 15 ноября 2026 — ОСНОВНАЯ ТЕКУЩАЯ ТРЕНИРОВКА
-    INITIAL_WORKOUT_2026_11_15
+    // 15 ноября 2026 — Прошлая завершенная тренировка
+    INITIAL_WORKOUT_2026_11_15,
+    // 16 ноября 2026 — ТЕКУЩАЯ АКТИВНАЯ ТРЕНИРОВКА ДАШИ ОТ ТРЕНЕРА
+    {
+      id: 'workout_client_dasha_seed_1794762375617_p8j0u',
+      clientId: 'client_dasha_seed',
+      title: 'Фулбоди: Спина и плечи (Тест 5.7)',
+      scheduledDate: '2026-11-16',
+      status: WorkoutStatus.PLANNED,
+      startedAt: null,
+      completedAt: null,
+      content: [
+        {
+          setId: 'block_1',
+          setTitle: 'Блок 1: Одиночное',
+          rounds: '1 упражнение',
+          exercises: [
+            {
+              id: 'ex_1',
+              name: 'Жим гантелей стоя',
+              scheme: '3 × 12 (16 кг)',
+              notes: 'Держать пресс в напряжении',
+              needVideo: true,
+              mediaUrl: 'https://youtu.be/dQw4w9WgXcQ'
+            }
+          ]
+        },
+        {
+          setId: 'block_2',
+          setTitle: 'Суперсет A',
+          rounds: '2 упражнения',
+          exercises: [
+            {
+              id: 'ex_2_1',
+              name: 'Подтягивания широким хватом',
+              scheme: '3 × 10',
+              notes: 'Лопатки вниз',
+              needVideo: true,
+              mediaUrl: ''
+            },
+            {
+              id: 'ex_2_2',
+              name: 'Отжимания на брусьях',
+              scheme: '3 × 12 (10 кг)',
+              notes: 'Корпус слегка вперед',
+              needVideo: false,
+              mediaUrl: ''
+            }
+          ]
+        }
+      ],
+      createdAt: '2026-11-15T17:06:15.617Z'
+    }
   ]);
 
   return {
