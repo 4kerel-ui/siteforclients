@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Панель тренера | Авторизация</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2013,18 +2016,37 @@
         // Fallback для статического GitHub Pages (без Node.js бэкенда)
       }
 
-      // Если бэкенд недоступен (GitHub Pages), читаем из localStorage или дефолтных клиентов
+      // Если бэкенд недоступен (GitHub Pages), читаем из store.json или localStorage
       let localClients = [];
       try {
-        const raw = localStorage.getItem('gym_clients_fallback_store');
-        localClients = raw ? JSON.parse(raw) : [
-          { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' },
-          { id: 'client_alina_seed', name: 'Алина', slug: 'alina', active: true, createdAt: '2026-11-15T15:35:54.000Z' }
-        ];
-      } catch (e) {
-        localClients = [
-          { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' }
-        ];
+        let storeData = null;
+        try {
+          const storeRes = await fetch(`./data/store.json?t=${Date.now()}`);
+          if (storeRes.ok) storeData = await storeRes.json();
+        } catch (e1) {}
+        if (!storeData) {
+          try {
+            const rawRes = await fetch(`https://raw.githubusercontent.com/4kerel-ui/siteforclients/main/data/store.json?t=${Date.now()}`);
+            if (rawRes.ok) storeData = await rawRes.json();
+          } catch (e2) {}
+        }
+        if (storeData && Array.isArray(storeData.clients) && storeData.clients.length > 0) {
+          localClients = storeData.clients;
+        }
+      } catch (eStore) {}
+
+      if (localClients.length === 0) {
+        try {
+          const raw = localStorage.getItem('gym_clients_fallback_store');
+          localClients = raw ? JSON.parse(raw) : [
+            { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' },
+            { id: 'client_alina_seed', name: 'Алина', slug: 'alina', active: true, createdAt: '2026-11-15T15:35:54.000Z' }
+          ];
+        } catch (e) {
+          localClients = [
+            { id: 'client_dasha_seed', name: 'Даша', slug: 'dasha', active: true, createdAt: '2026-11-01T10:00:00.000Z' }
+          ];
+        }
       }
       renderClientsList(localClients);
     }
@@ -2159,6 +2181,23 @@
           workouts = raw ? JSON.parse(raw) : [];
         } catch (e) {
           workouts = [];
+        }
+
+        if (workouts.length === 0) {
+          try {
+            let storeData = null;
+            try {
+              const storeRes = await fetch(`./data/store.json?t=${Date.now()}`);
+              if (storeRes.ok) storeData = await storeRes.json();
+            } catch (e1) {}
+            if (!storeData) {
+              const rawRes = await fetch(`https://raw.githubusercontent.com/4kerel-ui/siteforclients/main/data/store.json?t=${Date.now()}`);
+              if (rawRes.ok) storeData = await rawRes.json();
+            }
+            if (storeData && storeData.workouts && storeData.workouts[client.id]) {
+              workouts = storeData.workouts[client.id];
+            }
+          } catch (eStore) {}
         }
       }
 
