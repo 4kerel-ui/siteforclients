@@ -481,7 +481,110 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 3. Публичный маршрут тренировок для клиентской страницы (/api/client-workouts/:slug)
+  // 3. Обновить существующую тренировку (PUT /api/clients/:clientId/workouts/:workoutId)
+  if (pathname.startsWith('/api/clients/') && pathname.includes('/workouts/') && req.method === 'PUT') {
+    if (!requireAuth(req, res)) return;
+    const parts = pathname.split('/');
+    // /api/clients/:clientId/workouts/:workoutId -> parts[3] = clientId, parts[5] = workoutId
+    const clientId = parts[3];
+    const workoutId = parts[5];
+
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const store = readStore();
+        const clientQueue = store.workouts[clientId] || [];
+        const workoutIndex = clientQueue.findIndex(w => w.id === workoutId);
+
+        if (workoutIndex === -1) {
+          sendJson(res, 404, { success: false, message: 'Тренировка не найдена' });
+          return;
+        }
+
+        const existing = clientQueue[workoutIndex];
+
+        // Ограничение: нельзя редактировать тренировки, которые уже завершены или начаты
+        if (existing.status === 'completed') {
+          sendJson(res, 403, { success: false, message: 'Нельзя редактировать завершённую тренировку' });
+          return;
+        }
+        if (existing.status === 'started') {
+          sendJson(res, 403, { success: false, message: 'Нельзя редактировать тренировку, которую клиент уже начал выполнять' });
+          return;
+        }
+
+        const title = (payload.title || '').trim();
+        if (!title) {
+          sendJson(res, 400, { success: false, message: 'Название тренировки обязательно для заполнения' });
+          return;
+        }
+
+        if (!Array.isArray(payload.content) || payload.content.length === 0) {
+          sendJson(res, 400, { success: false, message: 'Тренировка должна содержать хотя бы один блок упражнений' });
+          return;
+        }
+
+        // Обновляем поля, сохраняя существующий ID и createdAt
+        existing.title = title;
+        existing.content = payload.content;
+        existing.updatedAt = new Date().toISOString();
+
+        writeStore(store);
+
+        sendJson(res, 200, {
+          success: true,
+          workout: existing,
+          message: 'Тренировка успешно обновлена'
+        });
+      } catch (err) {
+        sendJson(res, 400, { success: false, message: 'Некорректный формат данных' });
+      }
+    });
+    return;
+  }
+
+  // 4. Удалить тренировку из очереди (DELETE /api/clients/:clientId/workouts/:workoutId)
+  if (pathname.startsWith('/api/clients/') && pathname.includes('/workouts/') && req.method === 'DELETE') {
+    if (!requireAuth(req, res)) return;
+    const parts = pathname.split('/');
+    const clientId = parts[3];
+    const workoutId = parts[5];
+
+    const store = readStore();
+    const clientQueue = store.workouts[clientId] || [];
+    const workoutIndex = clientQueue.findIndex(w => w.id === workoutId);
+
+    if (workoutIndex === -1) {
+      sendJson(res, 404, { success: false, message: 'Тренировка не найдена' });
+      return;
+    }
+
+    const targetWorkout = clientQueue[workoutIndex];
+
+    // Ограничения: Не разрешай удалять завершённые тренировки из истории или тренировку в процессе
+    if (targetWorkout.status === 'completed') {
+      sendJson(res, 403, { success: false, message: 'Не разрешается удалять завершённые тренировки из истории' });
+      return;
+    }
+    if (targetWorkout.status === 'started') {
+      sendJson(res, 403, { success: false, message: 'Нельзя удалять тренировку, которую клиент уже выполняет' });
+      return;
+    }
+
+    // Удаляем из очереди
+    clientQueue.splice(workoutIndex, 1);
+    writeStore(store);
+
+    sendJson(res, 200, {
+      success: true,
+      message: 'Тренировка успешно удалена из очереди'
+    });
+    return;
+  }
+
+  // 5. Публичный маршрут тренировок для клиентской страницы (/api/client-workouts/:slug)
   if (pathname.startsWith('/api/client-workouts/') && req.method === 'GET') {
     const slug = pathname.slice('/api/client-workouts/'.length).trim().toLowerCase();
     const clients = getAllClients();
