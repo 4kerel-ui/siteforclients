@@ -535,7 +535,137 @@
       line-height: 1.5;
     }
 
-    /* Кнопка добавления клиента "+" */
+    /* Блок очереди тренировок на странице клиента */
+    .client-queue-section {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .queue-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .queue-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-add-workout {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 9px 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      transition: all 0.15s ease;
+    }
+
+    .btn-add-workout:hover {
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-add-workout:active {
+      transform: scale(0.97);
+    }
+
+    .queue-empty-box {
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      background: rgba(11, 15, 25, 0.4);
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    /* Модальное окно редактора тренировок (большое окно) */
+    .editor-modal-card {
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 26px 24px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: modalSlideUp 0.22s ease-out;
+    }
+
+    .editor-target-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .editor-blocks-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 80px;
+      background: rgba(11, 15, 25, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 16px;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .btn-add-block {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      color: #cbd5e1;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .btn-add-block:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent);
+      color: #fff;
+    }
     .btn-add-client {
       background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
       color: #fff;
@@ -779,22 +909,46 @@
         </div>
       </div>
 
-      <!-- ВИД 2: Страница выбранного клиента (заглушка) -->
+      <!-- ВИД 2: Страница выбранного клиента -->
       <div id="view-client-details" class="client-details-view">
         <div class="client-details-header">
           <button type="button" class="btn-back-clients" id="btn-back-to-clients">
             <span>←</span>
             <span>Все клиенты</span>
           </button>
-          <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Карточка клиента</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Управление клиентом:</span>
+            <span id="detail-header-badge" style="font-size: 0.82rem; font-weight: 700; color: #fff;">Даша</span>
+          </div>
         </div>
 
-        <div class="placeholder-client-box">
+        <!-- Шапка клиента -->
+        <div class="placeholder-client-box" style="padding: 24px 20px;">
           <div class="placeholder-avatar">🏋️‍♀️</div>
           <h2 class="placeholder-title" id="detail-client-name">Даша</h2>
-          <p class="placeholder-desc">
-            Страница управления клиентом. Здесь на следующих этапах будет отображаться календарь фактически выполненных тренировок и очередь занятий.
-          </p>
+          <div id="detail-client-link-wrap">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Индивидуальный адрес:</span>
+            <a href="#" target="_blank" id="detail-client-link" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; margin-left: 6px; text-decoration: none;">/client/dasha ↗</a>
+          </div>
+        </div>
+
+        <!-- Существующий блок: Очередь тренировок -->
+        <div class="client-queue-section" id="client-queue-block">
+          <div class="queue-header-row">
+            <h3 class="queue-title">
+              <span>📋</span>
+              <span>Очередь тренировок</span>
+            </h3>
+            <button type="button" class="btn-add-workout" id="btn-open-workout-editor">
+              <span style="font-size: 1.1rem; line-height: 1;">＋</span>
+              <span>Добавить тренировку</span>
+            </button>
+          </div>
+
+          <!-- Список ожидающих тренировок (заглушка очереди) -->
+          <div class="queue-empty-box" id="queue-content-slot">
+            В очереди пока нет тренировок. Нажмите «Добавить тренировку», чтобы назначить новое занятие.
+          </div>
         </div>
       </div>
 
@@ -834,6 +988,65 @@
           </button>
           <button type="submit" class="btn-modal-submit" id="btn-submit-create-modal">
             Создать
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. МОДАЛЬНОЕ ОКНО РЕДАКТОРА ТРЕНИРОВОК (ЭТАП 5.1: ИНТЕРФЕЙС И ОТКРЫТИЕ) -->
+  <div class="modal-overlay" id="workout-editor-modal" aria-hidden="true">
+    <div class="editor-modal-card" role="dialog" aria-labelledby="editor-modal-title">
+      <div class="modal-header-row">
+        <div>
+          <h3 class="modal-title" id="editor-modal-title">
+            <span>🏋️</span>
+            <span>Новая тренировка</span>
+          </h3>
+          <div class="editor-target-pill">
+            <span>Для клиента:</span>
+            <span id="editor-target-client-name">Даша</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-workout-editor" title="Закрыть">
+          &times;
+        </button>
+      </div>
+
+      <form id="workout-editor-form" novalidate onsubmit="return false;">
+        <!-- Поле: Название тренировки -->
+        <div class="form-group">
+          <label for="editor-workout-title" class="form-label">Название тренировки</label>
+          <input 
+            type="text" 
+            id="editor-workout-title" 
+            class="password-input" 
+            style="padding-right: 16px;" 
+            placeholder="Например: Сплит: Спина и плечи (или Фулбоди)" 
+            autocomplete="off"
+          >
+          <div class="input-error-msg" id="editor-title-error">Введите название тренировки</div>
+        </div>
+
+        <!-- Кнопка: Добавить блок -->
+        <div class="form-group" style="margin-top: 8px;">
+          <label class="form-label">Содержание тренировки (блоки и упражнения)</label>
+          <div class="editor-blocks-container" id="editor-blocks-list">
+            <span>Блоки упражнений пока не добавлены.</span>
+          </div>
+          <button type="button" class="btn-add-block" id="btn-editor-add-block" style="margin-top: 10px;">
+            <span style="font-size: 1.1rem; line-height: 1;">＋</span>
+            <span>Добавить блок</span>
+          </button>
+        </div>
+
+        <!-- Кнопки: Сохранить и Отмена -->
+        <div class="modal-actions-row" style="margin-top: 16px;">
+          <button type="button" class="btn-modal-cancel" id="btn-editor-cancel">
+            Отмена
+          </button>
+          <button type="button" class="btn-modal-submit" id="btn-editor-save">
+            Сохранить
           </button>
         </div>
       </form>
@@ -983,21 +1196,44 @@
         });
       });
 
-      // Нажатие на карточку клиента открывает страницу-заглушку с его именем
+      // Нажатие на карточку клиента открывает страницу управления клиентом
       clientsContainer.querySelectorAll('.client-card').forEach(card => {
         card.addEventListener('click', (e) => {
           if (e.target.closest('.btn-copy-link')) return;
-          const name = card.getAttribute('data-client-name') || 'Клиент';
-          openClientDetails(name);
+          const clientId = card.getAttribute('data-client-id');
+          const foundClient = clients.find(c => c.id === clientId) || {
+            id: clientId,
+            name: card.getAttribute('data-client-name') || 'Клиент',
+            slug: (card.getAttribute('data-client-name') || 'dasha').toLowerCase()
+          };
+          openClientDetails(foundClient);
         });
       });
     }
 
-    // Открытие страницы-заглушки клиента
-    function openClientDetails(clientName) {
-      detailClientName.textContent = clientName;
+    const detailHeaderBadge = document.getElementById('detail-header-badge');
+    const detailClientLink = document.getElementById('detail-client-link');
+
+    // Текущий выбранный в панели клиент
+    let currentSelectedClient = null;
+
+    // Открытие страницы управления выбранным клиентом
+    function openClientDetails(client) {
+      currentSelectedClient = client;
+      detailClientName.textContent = client.name || 'Клиент';
+      detailHeaderBadge.textContent = client.name || 'Клиент';
+
+      const isGhPages = window.location.hostname.includes('github.io');
+      const clientUrl = isGhPages 
+        ? `${window.location.origin}/siteforclients/client.html?client=${client.slug}`
+        : `/client/${client.slug}`;
+
+      detailClientLink.textContent = `${clientUrl} ↗`;
+      detailClientLink.href = clientUrl;
+
       viewClientsList.style.display = 'none';
       viewClientDetails.style.display = 'flex';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // Возврат к списку клиентов
@@ -1138,6 +1374,85 @@
         btnSubmitCreateModal.disabled = false;
         btnSubmitCreateModal.textContent = 'Создать';
       }
+    });
+
+    // ----------------------------------------------------
+    // Логика модального окна редактора тренировок (Этап 5.1: Интерфейс открытия)
+    // ----------------------------------------------------
+    const workoutEditorModal = document.getElementById('workout-editor-modal');
+    const btnOpenWorkoutEditor = document.getElementById('btn-open-workout-editor');
+    const btnCloseWorkoutEditor = document.getElementById('btn-close-workout-editor');
+    const btnEditorCancel = document.getElementById('btn-editor-cancel');
+    const btnEditorSave = document.getElementById('btn-editor-save');
+    const btnEditorAddBlock = document.getElementById('btn-editor-add-block');
+    const editorTargetClientName = document.getElementById('editor-target-client-name');
+    const editorWorkoutTitleInput = document.getElementById('editor-workout-title');
+    const editorTitleError = document.getElementById('editor-title-error');
+
+    function openWorkoutEditor() {
+      // Привязка к текущему выбранному клиенту
+      const clientName = currentSelectedClient?.name || detailClientName.textContent || 'Клиент';
+      editorTargetClientName.textContent = clientName;
+
+      editorWorkoutTitleInput.value = '';
+      hideEditorError();
+
+      workoutEditorModal.classList.add('active');
+      workoutEditorModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => editorWorkoutTitleInput.focus(), 60);
+    }
+
+    function closeWorkoutEditor() {
+      workoutEditorModal.classList.remove('active');
+      workoutEditorModal.setAttribute('aria-hidden', 'true');
+      editorWorkoutTitleInput.value = '';
+      hideEditorError();
+    }
+
+    function showEditorError(msg) {
+      editorTitleError.textContent = msg || 'Введите название тренировки';
+      editorTitleError.style.display = 'block';
+      editorWorkoutTitleInput.focus();
+    }
+
+    function hideEditorError() {
+      editorTitleError.style.display = 'none';
+    }
+
+    btnOpenWorkoutEditor.addEventListener('click', openWorkoutEditor);
+    btnCloseWorkoutEditor.addEventListener('click', closeWorkoutEditor);
+    btnEditorCancel.addEventListener('click', closeWorkoutEditor);
+
+    // Закрытие по клику вне окна
+    workoutEditorModal.addEventListener('click', (e) => {
+      if (e.target === workoutEditorModal) {
+        closeWorkoutEditor();
+      }
+    });
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && workoutEditorModal.classList.contains('active')) {
+        closeWorkoutEditor();
+      }
+    });
+
+    editorWorkoutTitleInput.addEventListener('input', hideEditorError);
+
+    // Интерфейс кнопки "Добавить блок" (пока заглушка этапа 5.1)
+    btnEditorAddBlock.addEventListener('click', () => {
+      alert('Интерфейс добавления блоков и упражнений будет реализован на следующем шаге (Этап 5.2).');
+    });
+
+    // Интерфейс кнопки "Сохранить" (пока проверка этапа 5.1)
+    btnEditorSave.addEventListener('click', () => {
+      const title = editorWorkoutTitleInput.value.trim();
+      if (!title) {
+        showEditorError('Пожалуйста, укажите название тренировки');
+        return;
+      }
+      alert(`Тренировка «${title}» для ${editorTargetClientName.textContent} готова к наполнению упражнениями! (Сохранение в БД будет на этапе 5.4)`);
+      closeWorkoutEditor();
     });
 
     // 1. Показать / скрыть пароль
