@@ -661,10 +661,174 @@
       width: 100%;
     }
 
-    .btn-add-block:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--accent);
+    /* Стили карточек блоков упражнений внутри редактора */
+    .editor-block-card {
+      width: 100%;
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .editor-block-card:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .editor-block-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    .editor-block-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .editor-block-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      white-space: nowrap;
+    }
+
+    .editor-block-name-input {
+      background: rgba(11, 15, 25, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 6px 10px;
       color: #fff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      flex: 1;
+      max-width: 260px;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .editor-block-name-input:focus {
+      border-color: var(--accent);
+      background: #111827;
+    }
+
+    .btn-delete-block {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-delete-block:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .editor-fields-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .editor-fields-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .editor-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .editor-field-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .editor-field-input {
+      background: rgba(11, 15, 25, 0.7);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .editor-field-input:focus {
+      border-color: var(--accent);
+      background: #111827;
+    }
+
+    /* Модальное окно выбора типа добавляемого блока */
+    .block-type-choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .choice-card-btn {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s ease;
+    }
+
+    .choice-card-btn:hover {
+      border-color: var(--accent);
+      background: #1b263b;
+      transform: translateY(-2px);
+    }
+
+    .choice-icon {
+      font-size: 1.8rem;
+    }
+
+    .choice-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .choice-desc {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.35;
     }
     .btn-add-client {
       background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
@@ -1053,6 +1217,43 @@
     </div>
   </div>
 
+  <!-- 5. МОДАЛЬНОЕ ОКНО ВЫБОРА ТИПА БЛОКА (ОДИНОЧНОЕ УПРАЖНЕНИЕ / СУПЕРСЕТ) -->
+  <div class="modal-overlay" id="block-type-modal" style="z-index: 120;" aria-hidden="true">
+    <div class="modal-card" style="max-width: 440px;" role="dialog" aria-labelledby="choice-modal-title">
+      <div class="modal-header-row">
+        <h3 class="modal-title" id="choice-modal-title">
+          <span>📦</span>
+          <span>Выберите тип блока</span>
+        </h3>
+        <button type="button" class="btn-close-modal" id="btn-close-choice-modal" title="Закрыть">
+          &times;
+        </button>
+      </div>
+
+      <div class="block-type-choice-grid">
+        <!-- Вариант 1: Одиночное упражнение -->
+        <button type="button" class="choice-card-btn" id="btn-choose-single-exercise">
+          <span class="choice-icon">🎯</span>
+          <span class="choice-title">Одиночное упражнение</span>
+          <span class="choice-desc">Классический блок: 1 упражнение с подходами, повторениями и весом</span>
+        </button>
+
+        <!-- Вариант 2: Суперсет (будет в этапе 5.3) -->
+        <button type="button" class="choice-card-btn" id="btn-choose-superset" style="opacity: 0.6;">
+          <span class="choice-icon">⚡</span>
+          <span class="choice-title">Суперсет</span>
+          <span class="choice-desc">Связка из 2+ упражнений подряд без отдыха (Этап 5.3)</span>
+        </button>
+      </div>
+
+      <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-modal-cancel" id="btn-cancel-choice-modal">
+          Отмена
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Хранение ключа сессии
     const SESSION_KEY = 'gym_admin_auth_token';
@@ -1377,7 +1578,7 @@
     });
 
     // ----------------------------------------------------
-    // Логика модального окна редактора тренировок (Этап 5.1: Интерфейс открытия)
+    // Логика модального окна редактора тренировок и блоков (Этап 5.2: Одиночные упражнения)
     // ----------------------------------------------------
     const workoutEditorModal = document.getElementById('workout-editor-modal');
     const btnOpenWorkoutEditor = document.getElementById('btn-open-workout-editor');
@@ -1388,14 +1589,28 @@
     const editorTargetClientName = document.getElementById('editor-target-client-name');
     const editorWorkoutTitleInput = document.getElementById('editor-workout-title');
     const editorTitleError = document.getElementById('editor-title-error');
+    const editorBlocksList = document.getElementById('editor-blocks-list');
+
+    // Модалка выбора типа блока
+    const blockTypeModal = document.getElementById('block-type-modal');
+    const btnCloseChoiceModal = document.getElementById('btn-close-choice-modal');
+    const btnCancelChoiceModal = document.getElementById('btn-cancel-choice-modal');
+    const btnChooseSingleExercise = document.getElementById('btn-choose-single-exercise');
+    const btnChooseSuperset = document.getElementById('btn-choose-superset');
+
+    // Локальный массив блоков текущей редактируемой тренировки
+    let editorBlocks = [];
 
     function openWorkoutEditor() {
-      // Привязка к текущему выбранному клиенту
       const clientName = currentSelectedClient?.name || detailClientName.textContent || 'Клиент';
       editorTargetClientName.textContent = clientName;
 
       editorWorkoutTitleInput.value = '';
       hideEditorError();
+
+      // Очищаем блоки при первичном открытии
+      editorBlocks = [];
+      renderEditorBlocks();
 
       workoutEditorModal.classList.add('active');
       workoutEditorModal.setAttribute('aria-hidden', 'false');
@@ -1407,6 +1622,7 @@
       workoutEditorModal.setAttribute('aria-hidden', 'true');
       editorWorkoutTitleInput.value = '';
       hideEditorError();
+      closeChoiceModal();
     }
 
     function showEditorError(msg) {
@@ -1423,6 +1639,177 @@
     btnCloseWorkoutEditor.addEventListener('click', closeWorkoutEditor);
     btnEditorCancel.addEventListener('click', closeWorkoutEditor);
 
+    // Модалка выбора типа
+    function openChoiceModal() {
+      blockTypeModal.classList.add('active');
+      blockTypeModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeChoiceModal() {
+      blockTypeModal.classList.remove('active');
+      blockTypeModal.setAttribute('aria-hidden', 'true');
+    }
+
+    btnEditorAddBlock.addEventListener('click', openChoiceModal);
+    btnCloseChoiceModal.addEventListener('click', closeChoiceModal);
+    btnCancelChoiceModal.addEventListener('click', closeChoiceModal);
+
+    blockTypeModal.addEventListener('click', (e) => {
+      if (e.target === blockTypeModal) closeChoiceModal();
+    });
+
+    // Вариант 1: Добавление одиночного упражнения
+    btnChooseSingleExercise.addEventListener('click', () => {
+      closeChoiceModal();
+      addSingleExerciseBlock();
+    });
+
+    // Вариант 2: Суперсет (заглушка)
+    btnChooseSuperset.addEventListener('click', () => {
+      alert('Режим суперсета будет добавлен на этапе 5.3!');
+    });
+
+    function addSingleExerciseBlock() {
+      const blockIndex = editorBlocks.length + 1;
+      const newBlock = {
+        id: 'block_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        type: 'single',
+        blockTitle: `Блок ${blockIndex}`,
+        exerciseName: '',
+        sets: 3,
+        reps: '12',
+        weight: '',
+        notes: ''
+      };
+
+      editorBlocks.push(newBlock);
+      renderEditorBlocks();
+    }
+
+    function removeBlock(blockId) {
+      editorBlocks = editorBlocks.filter(b => b.id !== blockId);
+      renderEditorBlocks();
+    }
+
+    function renderEditorBlocks() {
+      if (editorBlocks.length === 0) {
+        editorBlocksList.innerHTML = `
+          <div style="text-align: center; padding: 20px 10px; color: var(--text-muted);">
+            <div style="font-size: 1.6rem; margin-bottom: 6px;">🎯</div>
+            <span>Блоки упражнений пока не добавлены. Нажмите «＋ Добавить блок», чтобы добавить упражнение.</span>
+          </div>
+        `;
+        return;
+      }
+
+      editorBlocksList.innerHTML = editorBlocks.map((block, idx) => `
+        <div class="editor-block-card" data-block-id="${escapeHtml(block.id)}">
+          <div class="editor-block-top">
+            <div class="editor-block-title-wrap">
+              <span class="editor-block-badge">Одиночное</span>
+              <input 
+                type="text" 
+                class="editor-block-name-input" 
+                data-field="blockTitle"
+                value="${escapeHtml(block.blockTitle)}" 
+                placeholder="Название блока (например: Блок 1)"
+                title="Нажмите, чтобы изменить название блока"
+              >
+            </div>
+            <button 
+              type="button" 
+              class="btn-delete-block" 
+              data-delete-id="${escapeHtml(block.id)}" 
+              title="Удалить этот блок"
+            >
+              🗑
+            </button>
+          </div>
+
+          <!-- 1. Название упражнения -->
+          <div class="editor-field-group">
+            <label class="editor-field-label">Название упражнения</label>
+            <input 
+              type="text" 
+              class="editor-field-input" 
+              data-field="exerciseName"
+              value="${escapeHtml(block.exerciseName)}" 
+              placeholder="Например: Жим гантелей лёжа"
+            >
+          </div>
+
+          <!-- 2. Сетка: Подходы, Повторения, Вес -->
+          <div class="editor-fields-grid">
+            <div class="editor-field-group">
+              <label class="editor-field-label">Подходы</label>
+              <input 
+                type="number" 
+                class="editor-field-input" 
+                data-field="sets"
+                value="${escapeHtml(String(block.sets || ''))}" 
+                placeholder="3"
+                min="1"
+              >
+            </div>
+            <div class="editor-field-group">
+              <label class="editor-field-label">Повторения</label>
+              <input 
+                type="text" 
+                class="editor-field-input" 
+                data-field="reps"
+                value="${escapeHtml(block.reps)}" 
+                placeholder="12 или 10-15"
+              >
+            </div>
+            <div class="editor-field-group">
+              <label class="editor-field-label">Рабочий вес</label>
+              <input 
+                type="text" 
+                class="editor-field-input" 
+                data-field="weight"
+                value="${escapeHtml(block.weight)}" 
+                placeholder="20 кг или свой вес"
+              >
+            </div>
+          </div>
+
+          <!-- 3. Комментарий тренера -->
+          <div class="editor-field-group">
+            <label class="editor-field-label">Комментарий тренера</label>
+            <input 
+              type="text" 
+              class="editor-field-input" 
+              data-field="notes"
+              value="${escapeHtml(block.notes)}" 
+              placeholder="Например: Контролировать положение лопаток и темп"
+            >
+          </div>
+        </div>
+      `).join('');
+
+      // Привязка слушателей изменения полей
+      editorBlocksList.querySelectorAll('.editor-block-card').forEach(card => {
+        const blockId = card.getAttribute('data-block-id');
+        const targetBlock = editorBlocks.find(b => b.id === blockId);
+        if (!targetBlock) return;
+
+        card.querySelectorAll('input[data-field]').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const field = e.target.getAttribute('data-field');
+            targetBlock[field] = e.target.value;
+          });
+        });
+
+        // Кнопка удаления блока
+        const btnDelete = card.querySelector('.btn-delete-block');
+        if (btnDelete) {
+          btnDelete.addEventListener('click', () => {
+            removeBlock(blockId);
+          });
+        }
+      });
+    }
+
     // Закрытие по клику вне окна
     workoutEditorModal.addEventListener('click', (e) => {
       if (e.target === workoutEditorModal) {
@@ -1432,26 +1819,29 @@
 
     // Закрытие по Escape
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && workoutEditorModal.classList.contains('active')) {
-        closeWorkoutEditor();
+      if (e.key === 'Escape') {
+        if (blockTypeModal.classList.contains('active')) {
+          closeChoiceModal();
+        } else if (workoutEditorModal.classList.contains('active')) {
+          closeWorkoutEditor();
+        }
       }
     });
 
     editorWorkoutTitleInput.addEventListener('input', hideEditorError);
 
-    // Интерфейс кнопки "Добавить блок" (пока заглушка этапа 5.1)
-    btnEditorAddBlock.addEventListener('click', () => {
-      alert('Интерфейс добавления блоков и упражнений будет реализован на следующем шаге (Этап 5.2).');
-    });
-
-    // Интерфейс кнопки "Сохранить" (пока проверка этапа 5.1)
+    // Интерфейс кнопки "Сохранить" (пока валидация этапа 5.2)
     btnEditorSave.addEventListener('click', () => {
       const title = editorWorkoutTitleInput.value.trim();
       if (!title) {
         showEditorError('Пожалуйста, укажите название тренировки');
         return;
       }
-      alert(`Тренировка «${title}» для ${editorTargetClientName.textContent} готова к наполнению упражнениями! (Сохранение в БД будет на этапе 5.4)`);
+      if (editorBlocks.length === 0) {
+        alert('Добавьте хотя бы одно упражнение в тренировку!');
+        return;
+      }
+      alert(`Тренировка «${title}» содержит ${editorBlocks.length} блок(а). Сохранение в очередь будет подключено на этапе 5.4.`);
       closeWorkoutEditor();
     });
 
