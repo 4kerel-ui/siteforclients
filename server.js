@@ -405,6 +405,103 @@ const server = http.createServer((req, res) => {
   }
 
   // ==========================================
+  // API ОЧЕРЕДИ ТРЕНИРОВОК КЛИЕНТОВ (ЭТАП 5.7)
+  // ==========================================
+
+  // 1. Получить тренировки клиента (GET /api/clients/:clientId/workouts)
+  if (pathname.startsWith('/api/clients/') && pathname.endsWith('/workouts') && req.method === 'GET') {
+    if (!requireAuth(req, res)) return;
+    const parts = pathname.split('/');
+    // /api/clients/:clientId/workouts -> parts[3] = :clientId
+    const clientId = parts[3];
+    const store = readStore();
+    const clientWorkouts = store.workouts[clientId] || [];
+    sendJson(res, 200, { success: true, workouts: clientWorkouts });
+    return;
+  }
+
+  // 2. Добавить тренировку в очередь клиента (POST /api/clients/:clientId/workouts)
+  if (pathname.startsWith('/api/clients/') && pathname.endsWith('/workouts') && req.method === 'POST') {
+    if (!requireAuth(req, res)) return;
+    const parts = pathname.split('/');
+    const clientId = parts[3];
+
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const title = (payload.title || '').trim();
+
+        // Валидация 1: Название тренировки
+        if (!title) {
+          sendJson(res, 400, { success: false, message: 'Название тренировки обязательно для заполнения' });
+          return;
+        }
+
+        // Валидация 2: Наличие хотя бы одного блока
+        if (!Array.isArray(payload.content) || payload.content.length === 0) {
+          sendJson(res, 400, { success: false, message: 'Тренировка должна содержать хотя бы один блок упражнений' });
+          return;
+        }
+
+        const store = readStore();
+        if (!store.workouts[clientId]) {
+          store.workouts[clientId] = [];
+        }
+
+        // Формирование уникального ID тренировки
+        const workoutId = payload.id || `workout_${clientId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+        const newWorkout = {
+          id: workoutId,
+          clientId: clientId,
+          title: title,
+          scheduledDate: payload.scheduledDate || new Date().toISOString().split('T')[0],
+          status: 'planned', // Статус "Ожидает выполнения"
+          startedAt: null,
+          completedAt: null,
+          content: payload.content, // Сохранены все блоки, упражнения, порядок, комментарии, needVideo, mediaUrl
+          createdAt: payload.createdAt || new Date().toISOString()
+        };
+
+        // Добавляем тренировку в конец очереди выбранного клиента
+        store.workouts[clientId].push(newWorkout);
+        writeStore(store);
+
+        sendJson(res, 201, {
+          success: true,
+          workout: newWorkout,
+          message: 'Тренировка успешно добавлена в очередь клиента'
+        });
+      } catch (err) {
+        sendJson(res, 400, { success: false, message: 'Некорректный формат данных тренировки' });
+      }
+    });
+    return;
+  }
+
+  // 3. Публичный маршрут тренировок для клиентской страницы (/api/client-workouts/:slug)
+  if (pathname.startsWith('/api/client-workouts/') && req.method === 'GET') {
+    const slug = pathname.slice('/api/client-workouts/'.length).trim().toLowerCase();
+    const clients = getAllClients();
+    const client = clients.find(c => c.slug.toLowerCase() === slug || c.id === slug);
+    if (!client) {
+      sendJson(res, 404, { success: false, message: 'Клиент не найден' });
+      return;
+    }
+    const store = readStore();
+    const clientWorkouts = store.workouts[client.id] || [];
+    sendJson(res, 200, {
+      success: true,
+      clientId: client.id,
+      clientName: client.name,
+      workouts: clientWorkouts
+    });
+    return;
+  }
+
+  // ==========================================
   // МАРШРУТИЗАЦИЯ СТРАНИЦ
   // ==========================================
 
