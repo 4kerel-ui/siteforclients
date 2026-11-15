@@ -1641,8 +1641,37 @@
       document.title = `${currentClient.name} | Персональный тренировочный план`;
     }
 
-    // 1. Инициализируем хранилище и тестовые данные (идемпотентно, без дублей)
-    await WorkoutService.ensureSeeded();
+    // Если это не Даша, изолируем хранилище клиента, чтобы клиенты не видели чужие тренировки
+    const isDasha = !clientSlug || clientSlug === 'dasha';
+    if (!isDasha && currentClient) {
+      const clientKey = `gym_workouts_client_${currentClient.id}`;
+      WorkoutService.setAdapter(new WorkoutServiceModule.LocalStorageAdapter(clientKey));
+    }
+
+    // Загрузка тренировок с сервера (если доступны)
+    if (currentClient && currentClient.id) {
+      try {
+        const resWorkouts = await fetch(`/api/client-workouts/${encodeURIComponent(clientSlug || currentClient.slug)}`);
+        if (resWorkouts.ok) {
+          const dataW = await resWorkouts.json();
+          if (Array.isArray(dataW.workouts) && dataW.workouts.length > 0) {
+            for (const sWorkout of dataW.workouts) {
+              const existing = await WorkoutService.getWorkoutById(sWorkout.id);
+              if (!existing) {
+                await WorkoutService.adapter.save(sWorkout);
+              }
+            }
+          }
+        }
+      } catch (errW) {
+        console.warn('Сервер тренировок недоступен:', errW);
+      }
+    }
+
+    // 1. Инициализируем хранилище и тестовые данные (для Даши - дефолтные сиды)
+    if (isDasha) {
+      await WorkoutService.ensureSeeded();
+    }
 
     let calendarInstance = null;
     let runnerInstance = null;
