@@ -828,6 +828,106 @@
     }
 
     /* Стили элементов суперсета */
+    
+    /* Стили переключателя (toggle switch) и бейджей Stage 5.5 */
+    .editor-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: rgba(11, 15, 25, 0.45);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      margin-top: 2px;
+    }
+
+    .editor-toggle-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .editor-toggle-icon {
+      font-size: 1rem;
+    }
+
+    .editor-toggle-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+    }
+
+    .editor-toggle-sub {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+
+    .switch-ui {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch-ui input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: .2s ease;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .2s ease;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .switch-ui input:checked + .switch-slider {
+      background-color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    .switch-ui input:checked + .switch-slider:before {
+      transform: translateX(20px);
+    }
+
+    .editor-video-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
     .superset-exercises-container {
       display: flex;
       flex-direction: column;
@@ -1830,7 +1930,9 @@
         sets: 3,
         reps: '12',
         weight: '',
-        notes: ''
+        notes: '',
+        needVideo: false,
+        mediaUrl: ''
       };
 
       editorBlocks.push(newBlock);
@@ -1850,7 +1952,9 @@
             sets: 3,
             reps: '10',
             weight: '',
-            notes: ''
+            notes: '',
+            needVideo: false,
+            mediaUrl: ''
           },
           {
             id: 'ex_' + Date.now() + '_2',
@@ -1858,7 +1962,9 @@
             sets: 3,
             reps: '12',
             weight: '',
-            notes: ''
+            notes: '',
+            needVideo: false,
+            mediaUrl: ''
           }
         ]
       };
@@ -1877,7 +1983,9 @@
         sets: 3,
         reps: '10-12',
         weight: '',
-        notes: ''
+        notes: '',
+        needVideo: false,
+        mediaUrl: ''
       });
       renderEditorBlocks();
     }
@@ -2035,8 +2143,38 @@
                   type="text" 
                   class="editor-field-input" 
                   data-single-field="notes"
-                  value="${escapeHtml(block.notes)}" 
+                  value="${escapeHtml(block.notes || '')}" 
                   placeholder="Например: Контролировать положение лопаток"
+                >
+              </div>
+
+              <!-- Переключатель необходимости видео (Stage 5.5) -->
+              <div class="editor-toggle-row">
+                <div class="editor-toggle-label-wrap">
+                  <span class="editor-toggle-icon">📹</span>
+                  <div>
+                    <div class="editor-toggle-title">
+                      Необходимо снять видео техники
+                      ${block.needVideo ? '<span class="editor-video-badge">Снять видео</span>' : ''}
+                    </div>
+                    <div class="editor-toggle-sub">Клиент увидит отдельную информационную отметку</div>
+                  </div>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" data-single-field="needVideo" ${block.needVideo ? 'checked' : ''}>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <!-- Ссылка на видео техники (Stage 5.5) -->
+              <div class="editor-field-group">
+                <label class="editor-field-label">Ссылка на видео техники (необязательно)</label>
+                <input 
+                  type="text" 
+                  class="editor-field-input" 
+                  data-single-field="mediaUrl"
+                  value="${escapeHtml(block.mediaUrl || '')}" 
+                  placeholder="Например: https://youtu.be/... или ссылка на диск/gif"
                 >
               </div>
             </div>
@@ -2130,8 +2268,38 @@
                     type="text" 
                     class="editor-field-input" 
                     data-ex-field="notes"
-                    value="${escapeHtml(ex.notes)}" 
+                    value="${escapeHtml(ex.notes || '')}" 
                     placeholder="Например: Полная амплитуда"
+                  >
+                </div>
+
+                <!-- Переключатель необходимости видео (Stage 5.5) -->
+                <div class="editor-toggle-row">
+                  <div class="editor-toggle-label-wrap">
+                    <span class="editor-toggle-icon">📹</span>
+                    <div>
+                      <div class="editor-toggle-title">
+                        Необходимо снять видео техники
+                        ${ex.needVideo ? '<span class="editor-video-badge">Снять видео</span>' : ''}
+                      </div>
+                      <div class="editor-toggle-sub">Клиент увидит отдельную информационную отметку</div>
+                    </div>
+                  </div>
+                  <label class="switch-ui">
+                    <input type="checkbox" data-ex-field="needVideo" ${ex.needVideo ? 'checked' : ''}>
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+
+                <!-- Ссылка на видео техники (Stage 5.5) -->
+                <div class="editor-field-group">
+                  <label class="editor-field-label">Ссылка на видео техники (необязательно)</label>
+                  <input 
+                    type="text" 
+                    class="editor-field-input" 
+                    data-ex-field="mediaUrl"
+                    value="${escapeHtml(ex.mediaUrl || '')}" 
+                    placeholder="Например: https://youtu.be/... или ссылка на диск/gif"
                   >
                 </div>
               </div>
@@ -2213,10 +2381,18 @@
         // Обработка одиночного упражнения
         if (targetBlock.type === 'single') {
           card.querySelectorAll('input[data-single-field]').forEach(input => {
-            input.addEventListener('input', (e) => {
-              const field = e.target.getAttribute('data-single-field');
-              targetBlock[field] = e.target.value;
-            });
+            if (input.type === 'checkbox') {
+              input.addEventListener('change', (e) => {
+                const field = e.target.getAttribute('data-single-field');
+                targetBlock[field] = e.target.checked;
+                renderEditorBlocks();
+              });
+            } else {
+              input.addEventListener('input', (e) => {
+                const field = e.target.getAttribute('data-single-field');
+                targetBlock[field] = e.target.value;
+              });
+            }
           });
         }
 
@@ -2237,10 +2413,18 @@
             if (!targetEx) return;
 
             exItem.querySelectorAll('input[data-ex-field]').forEach(input => {
-              input.addEventListener('input', (e) => {
-                const field = e.target.getAttribute('data-ex-field');
-                targetEx[field] = e.target.value;
-              });
+              if (input.type === 'checkbox') {
+                input.addEventListener('change', (e) => {
+                  const field = e.target.getAttribute('data-ex-field');
+                  targetEx[field] = e.target.checked;
+                  renderEditorBlocks();
+                });
+              } else {
+                input.addEventListener('input', (e) => {
+                  const field = e.target.getAttribute('data-ex-field');
+                  targetEx[field] = e.target.value;
+                });
+              }
             });
 
             // Кнопка удаления упражнения
