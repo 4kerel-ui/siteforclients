@@ -1,0 +1,29 @@
+{
+  "clients": [
+    {
+      "id": "client_dasha_seed",
+      "name": "Даша",
+      "slug": "dasha",
+      "createdAt": "2026-11-01T10:00:00.000Z",
+      "active": true
+    },
+    {
+      "id": "client_alina_mwhzy8ws",
+      "name": "Алина",
+      "slug": "alina",
+      "createdAt": "2026-11-15T15:35:54.268Z",
+      "active": true
+    },
+    {
+      "id": "client_kristina_mwi02b6j",
+      "name": "Кристина",
+      "slug": "kristina",
+      "createdAt": "2026-11-15T15:39:03.835Z",
+      "active": true
+    }
+  ],
+  "workouts": {
+    "client_alina_mwhzy8ws": [],
+    "client_kristina_mwi02b6j": []
+  }
+}
