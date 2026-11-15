@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Личный кабинет клиента | Тренировочный план</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d30;
+      --card-border: #232f48;
+      --card-border-hover: #38bdf8;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.15);
+      --purple: #a855f7;
+      --purple-bg: rgba(168, 85, 247, 0.15);
+      --card-inner: rgba(11, 15, 25, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 20px 14px 60px 14px;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 1. Блок приветствия */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 4px 0 4px;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+
+    .profile-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .profile-name {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .profile-subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1e293b, #334155);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* 2. Блок основной тренировки на сегодня */
+    .today-card {
+      background: linear-gradient(180deg, #18233c 0%, #151d30 100%);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 20px 18px;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 20px -5px rgba(56, 189, 248, 0.15);
+    }
+
+    .today-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .status-badge.planned {
+      background: rgba(168, 85, 247, 0.15);
+      color: #e9d5ff;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+    }
+
+    .status-badge.started {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .status-badge.completed {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .today-date {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .today-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .today-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 16px;
+    }
+
+    .today-stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 10px 12px;
+      background: var(--card-inner);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .today-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      outline: none;
+      text-align: center;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Блок истории выполненных тренировок */
+    .section-block {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mini-card {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .mini-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateX(2px);
+    }
+
+    .mini-card-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mini-card-date {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mini-card-date.history-date {
+      color: #a7f3d0;
+    }
+
+    .mini-card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .mini-card-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .mini-card-meta code {
+      font-family: monospace;
+      color: #64748b;
+    }
+
+    .mini-card-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .badge-success {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* ==============================================================
+       3. СТИЛИ КАЛЕНДАРЯ ТРЕНИРОВОК
+       Расположен непосредственно под основной тренировкой
+    ============================================================== */
+    .calendar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cal-title-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cal-icon {
+      font-size: 1.2rem;
+    }
+
+    .cal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .cal-month-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card-inner);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .cal-month-btn {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cal-month-btn.active {
+      color: #fff;
+      background: #232f48;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .cal-weekdays-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cal-days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: rgba(11, 15, 25, 0.35);
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      outline: none;
+      padding: 0;
+    }
+
+    .cal-day.other-month {
+      opacity: 0.15;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    /* Свободный день */
+    .cal-day.free-day {
+      color: #64748b;
+    }
+
+    .cal-day.free-day:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+    }
+
+    /* Завершенная тренировка */
+    .cal-day.completed {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #a7f3d0;
+      font-weight: 700;
+    }
+
+    .cal-status-icon.completed {
+      position: absolute;
+      bottom: 2px;
+      font-size: 0.65rem;
+      color: var(--success);
+      font-weight: 900;
+    }
+
+    /* Запланированная тренировка */
+    .cal-day.planned {
+      background: rgba(168, 85, 247, 0.14);
+      border-color: rgba(168, 85, 247, 0.45);
+      color: #e9d5ff;
+      font-weight: 700;
+    }
+
+    .cal-status-icon.planned {
+      position: absolute;
+      bottom: 3px;
+      font-size: 0.9rem;
+      line-height: 0.5;
+      color: var(--purple);
+    }
+
+    /* Сегодня (15 ноября) */
+    .cal-day.today {
+      border: 2px solid var(--accent) !important;
+      background: rgba(56, 189, 248, 0.18);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+
+    /* Выбранный кликом день */
+    .cal-day.selected {
+      outline: 2px solid #fff;
+      outline-offset: 1px;
+    }
+
+    /* Легенда календаря */
+    .cal-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .cal-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .legend-chip.completed {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .legend-chip.planned {
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid var(--purple);
+      color: var(--purple);
+    }
+
+    .legend-chip.today {
+      border: 2px solid var(--accent);
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .legend-chip.free {
+      background: rgba(11, 15, 25, 0.5);
+      border: 1px solid var(--card-border);
+    }
+
+    /* Интерактивная плашка выбранного дня под календарем */
+    .cal-selection-banner {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-top: 2px;
+    }
+
+    .selected-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .selected-date {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .status-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .status-tag.success {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-tag.planned {
+      background: var(--purple-bg);
+      color: var(--purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .selected-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .selected-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .selected-meta code {
+      font-family: monospace;
+      color: #64748b;
+      font-size: 0.72rem;
+    }
+
+    .selected-empty-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 10px 0;
+    }
+
+    /* ==============================================================
+       4. МОДАЛЬНОЕ ОКНО ПРОСМОТРА ТРЕНИРОВКИ
+    ============================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 440px;
+      max-height: 85vh;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.15);
+      animation: modalSlideUp 0.22s ease-out;
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        transform: translateY(18px) scale(0.97);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--card-border);
+      gap: 12px;
+      background: rgba(11, 15, 25, 0.5);
+    }
+
+    .modal-header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .modal-date-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-date {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .modal-status-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .modal-status-badge.completed {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .modal-status-badge.planned {
+      background: var(--purple-bg);
+      color: var(--purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .modal-status-badge.started {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .modal-workout-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    /* Красный крестик в правом верхнем углу */
+    .btn-close-red {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #ef4444;
+      font-size: 1.5rem;
+      line-height: 1;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-weight: 700;
+      padding: 0;
+      flex-shrink: 0;
+      outline: none;
+    }
+
+    .btn-close-red:hover {
+      background: #ef4444;
+      color: #ffffff;
+      transform: scale(1.08);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-close-red:active {
+      transform: scale(0.95);
+    }
+
+    .modal-body {
+      padding: 16px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Стили модального окна и единых компонентов сетов */
+    .modal-body .set-block {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 12px;
+    }
+
+    .modal-body .set-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .modal-body .exercises-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .modal-body .exercise-item {
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(11, 15, 25, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .modal-body .ex-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .modal-body .ex-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      line-height: 1.35;
+      color: #fff;
+    }
+
+    .modal-body .video-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 5px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .modal-body .ex-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .modal-body .meta-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--success);
+    }
+
+    .modal-body .tag-video-req {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .modal-body .ex-notes {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 5px 8px;
+      border-radius: 6px;
+    }
+
+    /* ==============================================================
+       5. СТИЛИ РЕЖИМА ВЫПОЛНЕНИЯ ТРЕНИРОВКИ (RUNNER)
+    ============================================================== */
+    .container-views {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .workout-runner-view {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .runner-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .btn-back-nav {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-back-nav:hover {
+      opacity: 0.8;
+    }
+
+    .runner-status-chip {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .runner-header-card {
+      background: linear-gradient(180deg, #18233c 0%, #151d30 100%);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .runner-date-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .runner-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.25;
+    }
+
+    .runner-stats-line {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .runner-hint {
+      font-size: 0.82rem;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 10px;
+      padding: 8px 12px;
+      line-height: 1.4;
+    }
+
+    .runner-content-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .runner-set-block {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .runner-set-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+    }
+
+    /* Обозначения сетов и разминки: уменьшенный контраст и визуальный вес */
+    .runner-set-title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #64748b; /* Менее контрастный, приглушенный сланцевый цвет */
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .modal-body .set-title {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #64748b;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .circuit-badge,
+    .modal-body .circuit-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: rgba(148, 163, 184, 0.08);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    .runner-exercises-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Интерактивная карточка упражнения */
+    .runner-exercise-item {
+      background: rgba(11, 15, 25, 0.65);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .runner-exercise-item.has-media {
+      cursor: pointer;
+    }
+
+    .runner-exercise-item.has-media:hover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .runner-exercise-item.has-media:active {
+      transform: scale(0.99);
+      border-color: var(--accent-hover);
+    }
+
+    .runner-exercise-item.no-media {
+      cursor: default;
+    }
+
+    /* Лаконичный информационный блок о необходимости снять видео техники */
+    .video-record-callout {
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      width: fit-content;
+    }
+
+    .video-record-icon {
+      font-size: 0.95rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .video-record-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #fca5a5;
+      letter-spacing: 0.01em;
+    }
+
+    .runner-footer-actions {
+      padding: 10px 0 20px 0;
+    }
+
+    .btn-lg {
+      padding: 16px 20px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    /* ==============================================================
+       6. СТИЛИ МОДАЛЬНОГО ОКНА ТЕХНИКИ (YOUTUBE / GIF / ФОТО)
+    ============================================================== */
+    .technique-box {
+      width: 100%;
+      max-width: 460px;
+      max-height: 85vh;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.2);
+      animation: modalSlideUp 0.22s ease-out;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 */
+      background: #000;
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .image-media-container {
+      width: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 380px;
+      overflow: hidden;
+    }
+
+    .technique-img {
+      max-width: 100%;
+      max-height: 380px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .empty-media-msg {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      background: rgba(11, 15, 25, 0.5);
+      line-height: 1.5;
+    }
+
+    .technique-desc-box {
+      padding: 14px 16px;
+      background: var(--card-inner);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .technique-scheme {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.12);
+      padding: 4px 10px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .technique-notes {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- РЕЖИМ 1: Личный кабинет (Dashboard) -->
+  <div id="view-dashboard" class="container-views">
+
+    <!-- 1. Заголовок с приветствием клиента -->
+    <header class="profile-header">
+      <div class="profile-info">
+        <div class="profile-badge">
+          <span class="profile-badge-dot"></span>
+          Личный кабинет
+        </div>
+        <h1 class="profile-name">Привет, Дарья! 👋</h1>
+        <p class="profile-subtitle">Твой персональный тренировочный план</p>
+      </div>
+      <div class="profile-avatar" title="Профиль">
+        🏋️‍♀️
+      </div>
+    </header>
+
+    <!-- 2. Блок текущей тренировки (клиенту доступна только одна тренировка, назначенная тренером) -->
+    <section class="today-card" id="today-block">
+      <!-- Заполняется динамически: карточка текущей тренировки либо сообщение "Новая тренировка пока не назначена" -->
+    </section>
+
+    <!-- 3. Блок календаря тренировок (расположен непосредственно под основной тренировкой) -->
+    <section class="calendar-card" id="calendar-mount">
+      <!-- Сюда монтируется календарь через workout-calendar.js -->
+    </section>
+
+    <!-- 4. Блок истории завершённых тренировок -->
+    <section class="section-block" id="history-section">
+      <div class="section-header">
+        <h3 class="section-title">🏆 История тренировок</h3>
+      </div>
+      <div class="cards-list" id="history-list">
+        <!-- Заполняется динамически из хранилища -->
+      </div>
+    </section>
+
+    <footer>
+      Синхронизировано с базой данных • Время Москвы (UTC+3)
+      <br>
+      <a href="#" id="btn-reset-demo" style="color: #64748b; font-size: 0.7rem; text-decoration: underline; display: inline-block; margin-top: 6px;">
+        Сбросить демо-данные (начать заново)
+      </a>
+    </footer>
+
+  </div>
+
+  <!-- РЕЖИМ 2: Экран выполнения тренировки (Workout Runner) -->
+  <div id="view-runner" class="container-views" style="display: none;">
+    <!-- Сюда монтируется режим выполнения через workout-runner.js -->
+  </div>
+
+</div>
+
+<!-- 4. Модальное окно просмотра тренировки дня -->
+<div id="workout-modal-overlay" class="modal-overlay" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-workout-title">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <div class="modal-date-row">
+          <span class="modal-date" id="modal-workout-date">Дата тренировки</span>
+          <span class="modal-status-badge" id="modal-workout-status">Статус</span>
+        </div>
+        <h3 class="modal-workout-title" id="modal-workout-title">Название тренировки</h3>
+      </div>
+      <!-- Красный крестик в правом верхнем углу -->
+      <button type="button" class="btn-close-red" id="modal-close-btn" title="Закрыть (Esc)" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-workout-body">
+      <!-- Содержание тренировки рендерится через единый компонент -->
+    </div>
+  </div>
+</div>
+
+<!-- 5. Модальное окно техники упражнения (YouTube / GIF / Фото) -->
+<div id="technique-modal-overlay" class="modal-overlay" aria-hidden="true">
+  <div class="technique-box" role="dialog" aria-modal="true" aria-labelledby="technique-modal-title">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <span class="modal-date" style="color: var(--accent);">Техника упражнения</span>
+        <h3 class="modal-workout-title" id="technique-modal-title" style="font-size: 1.05rem;">Название упражнения</h3>
+      </div>
+      <!-- Красный крестик -->
+      <button type="button" class="btn-close-red" id="technique-close-btn" title="Закрыть (Esc)" aria-label="Закрыть">&times;</button>
+    </div>
+    
+    <!-- Медиа-контейнер (видео YouTube, GIF или изображение) -->
+    <div id="technique-media-slot"></div>
+
+    <!-- Описание и указания тренера -->
+    <div class="technique-desc-box">
+      <div class="technique-scheme" id="technique-modal-scheme">Схема не указана</div>
+      <div class="technique-notes" id="technique-modal-notes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Подключение сервиса данных, календаря и модуля выполнения -->
+<script src="workout-service.js?v=3"></script>
+<script src="workout-calendar.js?v=3"></script>
+<script src="workout-runner.js?v=3"></script>
+
+<script>
+  // Единый компонент безопасного экранирования текста
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /**
+   * Генерация медиа-контейнера для техники упражнения:
+   * Поддерживает:
+   * 1. YouTube (ID или прямая ссылка любого формата)
+   * 2. GIF-анимацию по ссылке
+   * 3. Изображение / фото по ссылке
+   * 4. Заглушку при отсутствии ссылки
+   */
+  function renderTechniqueMediaHtml(mediaSource) {
+    if (!mediaSource || typeof mediaSource !== 'string' || !mediaSource.trim()) {
+      return `
+        <div class="empty-media-msg">
+          <span style="font-size: 2.2rem; display: block; margin-bottom: 8px;">🎬</span>
+          Медиаматериалы по технике (видео, GIF или фото) скоро будут загружены тренером.
+        </div>
+      `;
+    }
+
+    const src = mediaSource.trim();
+
+    // 1. Проверка на YouTube (ID 11 символов либо полная ссылка: watch, shorts, youtu.be, embed)
+    let ytId = null;
+    if (/^[a-zA-Z0-9_-]{11}$/.test(src)) {
+      ytId = src;
+    } else {
+      const match = src.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([a-zA-Z0-9_-]{11})/i);
+      if (match) {
+        ytId = match[1];
+      }
+    }
+
+    if (ytId) {
+      return `
+        <div class="video-container">
+          <iframe 
+            src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" 
+            allow="autoplay; encrypted-media" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      `;
+    }
+
+    // 2. Проверка на GIF или фото (расширения .gif, .png, .jpg, .webp или ссылка на картинку)
+    if (/\.(gif|png|jpe?g|webp|svg)(\?.*)?$/i.test(src) || /^https?:\/\//i.test(src)) {
+      return `
+        <div class="image-media-container">
+          <img src="${escapeHtml(src)}" alt="Техника выполнения" class="technique-img" loading="lazy">
+        </div>
+      `;
+    }
+
+    return `
+      <div class="empty-media-msg">
+        Медиафайл по технике не найден
+      </div>
+    `;
+  }
+
+  // Элементы модального окна просмотра плана
+  const modalOverlay = document.getElementById('workout-modal-overlay');
+  const modalDate = document.getElementById('modal-workout-date');
+  const modalStatus = document.getElementById('modal-workout-status');
+  const modalTitle = document.getElementById('modal-workout-title');
+  const modalBody = document.getElementById('modal-workout-body');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+
+  // Элементы модального окна техники
+  const techniqueOverlay = document.getElementById('technique-modal-overlay');
+  const techniqueTitle = document.getElementById('technique-modal-title');
+  const techniqueMediaSlot = document.getElementById('technique-media-slot');
+  const techniqueScheme = document.getElementById('technique-modal-scheme');
+  const techniqueNotes = document.getElementById('technique-modal-notes');
+  const techniqueCloseBtn = document.getElementById('technique-close-btn');
+
+  // Контейнеры переключения экранов
+  const viewDashboard = document.getElementById('view-dashboard');
+  const viewRunner = document.getElementById('view-runner');
+
+  let activeTechniqueTrigger = null;
+
+  /**
+   * Открытие модального окна техники упражнения
+   * @param {Object} ex - объект упражнения
+   * @param {Object} options - { trigger: 'hover' | 'click' }
+   */
+  function openTechniqueModal(ex, options = {}) {
+    if (!ex) return;
+    const mediaSrc = ex.mediaUrl || ex.videoId || '';
+    if (!mediaSrc || !mediaSrc.trim()) {
+      // Если видео отсутствует, не открываем пустое окно
+      return;
+    }
+
+    activeTechniqueTrigger = options.trigger || 'click';
+
+    techniqueTitle.textContent = ex.name || 'Техника выполнения';
+    techniqueScheme.textContent = ex.scheme || 'Схема выполнения не указана';
+    techniqueNotes.textContent = ex.notes || '';
+    techniqueNotes.style.display = ex.notes ? 'block' : 'none';
+
+    // Рендерим медиа (YouTube, GIF или фото)
+    techniqueMediaSlot.innerHTML = renderTechniqueMediaHtml(mediaSrc);
+
+    techniqueOverlay.classList.add('active');
+    techniqueOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Закрытие модального окна техники
+   * @param {Object} options - { trigger: 'hover' | 'click' | 'close-btn' }
+   */
+  function closeTechniqueModal(options = {}) {
+    // Если закрытие вызвано уходом курсора (hover), закрываем только если окно было открыто по hover
+    if (options.trigger === 'hover' && activeTechniqueTrigger !== 'hover') {
+      return;
+    }
+
+    techniqueMediaSlot.innerHTML = ''; // останавливает воспроизведение видео/звука
+    techniqueOverlay.classList.remove('active');
+    techniqueOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    activeTechniqueTrigger = null;
+  }
+
+  techniqueCloseBtn.addEventListener('click', closeTechniqueModal);
+  techniqueOverlay.addEventListener('click', (e) => {
+    if (e.target === techniqueOverlay) {
+      closeTechniqueModal();
+    }
+  });
+
+  /**
+   * Единый компонент отображения содержания тренировки в режиме просмотра.
+   */
+  function renderWorkoutContentHtml(content) {
+    if (!Array.isArray(content) || content.length === 0) {
+      return '<div class="selected-empty-text">Содержание тренировки отсутствует.</div>';
+    }
+
+    return content.map((block) => `
+      <div class="set-block">
+        <div class="set-header">
+          <span class="set-title">${escapeHtml(block.setTitle || 'Сет')}</span>
+          <span class="circuit-badge">${escapeHtml(block.rounds || '')}</span>
+        </div>
+        <div class="exercises-list">
+          ${(block.exercises || []).map((ex, eIdx) => {
+            const hasMedia = Boolean((ex.mediaUrl && ex.mediaUrl.trim()) || (ex.videoId && ex.videoId.trim()));
+            return `
+              <div 
+                class="exercise-item ${hasMedia ? 'has-media' : 'no-media'}" 
+                data-ex-json="${escapeHtml(JSON.stringify(ex))}"
+              >
+                <div class="ex-top">
+                  <span class="ex-name">${escapeHtml(ex.name)}</span>
+                </div>
+                <div class="ex-meta">
+                  <span class="meta-tag">${escapeHtml(ex.scheme || 'Рабочий темп')}</span>
+                </div>
+                ${ex.needVideo ? `
+                  <div class="video-record-callout">
+                    <span class="video-record-icon">📹</span>
+                    <span class="video-record-label">Снять видео</span>
+                  </div>
+                ` : ''}
+                ${ex.notes ? `<div class="ex-notes">${escapeHtml(ex.notes)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Открытие модального окна просмотра тренировки.
+   * Не изменяет статус тренировки и не допускает редактирования.
+   */
+  function openWorkoutModal(workout, fallbackDateStr) {
+    if (!workout) return;
+
+    const dateStr = workout.scheduledDate || fallbackDateStr || '';
+    if (dateStr) {
+      const [y, m, d] = dateStr.split('-');
+      const months = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+      const weekdays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+      const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      const weekdayName = weekdays[dateObj.getDay()];
+      modalDate.textContent = `${parseInt(d, 10)} ${months[parseInt(m, 10)]} ${y}, ${weekdayName}`;
+    } else {
+      modalDate.textContent = 'Тренировка';
+    }
+
+    modalTitle.textContent = workout.title;
+
+    // Статус
+    const status = workout.status || 'planned';
+    modalStatus.className = 'modal-status-badge ' + status;
+    modalStatus.textContent = status === 'completed'
+      ? '✔ Выполнена'
+      : status === 'started'
+      ? '⚡ В процессе'
+      : '⏳ Запланирована';
+
+    // Рендеринг через единый компонент
+    modalBody.innerHTML = renderWorkoutContentHtml(workout.content);
+
+    // Привязываем взаимодействие по упражнениям (hover / click) для открытия техники
+    modalBody.querySelectorAll('.exercise-item.has-media').forEach(card => {
+      let hoverTimer = null;
+      card.addEventListener('mouseenter', () => {
+        hoverTimer = setTimeout(() => {
+          try {
+            const ex = JSON.parse(card.getAttribute('data-ex-json'));
+            openTechniqueModal(ex, { trigger: 'hover' });
+          } catch (e) {}
+        }, 250);
+      });
+
+      card.addEventListener('mouseleave', () => {
+        if (hoverTimer) clearTimeout(hoverTimer);
+        closeTechniqueModal({ trigger: 'hover' });
+      });
+
+      card.addEventListener('click', () => {
+        if (hoverTimer) clearTimeout(hoverTimer);
+        try {
+          const ex = JSON.parse(card.getAttribute('data-ex-json'));
+          openTechniqueModal(ex, { trigger: 'click' });
+        } catch (e) {}
+      });
+    });
+
+    // Показываем окно
+    modalOverlay.classList.add('active');
+    modalOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Закрытие модального окна
+   */
+  function closeWorkoutModal() {
+    modalOverlay.classList.remove('active');
+    modalOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  // Обработчики закрытия:
+  // 1. По красному крестику
+  modalCloseBtn.addEventListener('click', closeWorkoutModal);
+
+  // 2. По нажатию вне окна (клик по фоновому оверлею)
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+      closeWorkoutModal();
+    }
+  });
+
+  // 3. По нажатию клавиши Escape (закрывает технику либо план)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (techniqueOverlay && techniqueOverlay.classList.contains('active')) {
+        closeTechniqueModal();
+      } else if (modalOverlay && modalOverlay.classList.contains('active')) {
+        closeWorkoutModal();
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Определение клиента по индивидуальному адресу (/client/:slug или query параметр ?client=...)
+    let currentClient = null;
+    const pathname = window.location.pathname;
+    let clientSlug = '';
+
+    if (pathname.startsWith('/client/')) {
+      clientSlug = pathname.replace('/client/', '').replace(/\/$/, '').trim();
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      clientSlug = urlParams.get('client') || '';
+    }
+
+    // Если адрес содержит конкретный slug, проверяем существование клиента на сервере
+    if (clientSlug) {
+      try {
+        const res = await fetch(`/api/client-info/${encodeURIComponent(clientSlug)}`);
+        if (res.ok) {
+          const data = await res.json();
+          currentClient = data.client;
+        } else {
+          // Клиент не найден по указанному адресу
+          document.body.innerHTML = `
+            <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 20px; text-align: center;">
+              <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px;">
+                🔍
+              </div>
+              <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Клиент не найден</h1>
+              <p style="font-size: 0.95rem; color: #94a3b8; max-width: 400px; line-height: 1.5; margin-bottom: 24px;">
+                По адресу <code>/client/${escapeHtml(clientSlug)}</code> клиент не зарегистрирован. Проверьте правильность ссылки или обратитесь к тренеру.
+              </p>
+              <a href="/client/dasha" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; text-decoration: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
+                Перейти в кабинет Даши →
+              </a>
+            </div>
+          `;
+          return;
+        }
+      } catch (err) {
+        console.warn('Сервер недоступен, fallback режим:', err);
+      }
+    }
+
+    // Если клиент найден, обновляем имя в приветствии
+    if (currentClient && currentClient.name) {
+      const nameEl = document.querySelector('.profile-name');
+      if (nameEl) nameEl.textContent = `Привет, ${currentClient.name}! 👋`;
+      document.title = `${currentClient.name} | Персональный тренировочный план`;
+    }
+
+    // 1. Инициализируем хранилище и тестовые данные (идемпотентно, без дублей)
+    await WorkoutService.ensureSeeded();
+
+    let calendarInstance = null;
+    let runnerInstance = null;
+
+    let currentActiveWorkout = null;
+
+    /**
+     * Обновить блок текущей тренировки на дашборде.
+     * Клиенту доступна строго одна текущая тренировка.
+     * Если она завершена и новая еще не назначена тренером - выводим сообщение.
+     */
+    async function updateDashboardCurrentCard() {
+      const container = document.getElementById('today-block');
+      if (!container) return;
+
+      currentActiveWorkout = await WorkoutService.getCurrentWorkout();
+
+      if (!currentActiveWorkout) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 28px 16px;">
+            <div style="font-size: 2.2rem; margin-bottom: 10px;">✨</div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 6px;">
+              Новая тренировка пока не назначена
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 380px; margin: 0 auto;">
+              Вы завершили все назначенные тренировки! Тренер составит следующий план после анализа вашего прогресса.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const setsCount = currentActiveWorkout.content ? currentActiveWorkout.content.length : 0;
+      let exCount = 0;
+      if (currentActiveWorkout.content) {
+        currentActiveWorkout.content.forEach(s => exCount += (s.exercises ? s.exercises.length : 0));
+      }
+
+      const isStarted = currentActiveWorkout.status === 'started';
+      const statusBadgeHtml = isStarted
+        ? `<span class="status-badge started">⚡ В процессе</span>`
+        : `<span class="status-badge planned">Ожидает выполнения</span>`;
+
+      // Форматирование даты добавления
+      let createdDateText = '15 ноября 2026';
+      if (currentActiveWorkout.scheduledDate) {
+        const [y, m, d] = currentActiveWorkout.scheduledDate.split('-');
+        const months = ['', 'ноября', 'декабря']; // fallback
+        const monthNames = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        createdDateText = `${parseInt(d, 10)} ${monthNames[parseInt(m, 10)] || ''} ${y}`;
+      }
+
+      container.innerHTML = `
+        <div class="today-top">
+          ${statusBadgeHtml}
+          <span class="today-date">Добавлена: ${createdDateText}</span>
+        </div>
+        
+        <h2 class="today-title">${escapeHtml(currentActiveWorkout.title)}</h2>
+        <p class="today-desc">Сбалансированная тренировка с акцентом на проработку мышц спины, плечевого пояса и ягодиц.</p>
+        
+        <div class="today-stats">
+          <div class="stat-item">
+            <span class="stat-label">Блоков</span>
+            <span class="stat-val">${setsCount} сета</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Упражнений</span>
+            <span class="stat-val">${exCount} упр.</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Статус</span>
+            <span class="stat-val">${isStarted ? 'В процессе' : 'Ожидает'}</span>
+          </div>
+        </div>
+
+        <div class="today-actions">
+          <button type="button" class="btn btn-secondary" id="btn-preview">
+            👁 Посмотреть
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-start">
+            ${isStarted ? '⚡ Продолжить тренировку' : '▶ Начать тренировку'}
+          </button>
+        </div>
+      `;
+
+      // Кнопка "👁 Посмотреть"
+      container.querySelector('#btn-preview').addEventListener('click', (e) => {
+        e.preventDefault();
+        openWorkoutModal(currentActiveWorkout);
+      });
+
+      // Кнопка "▶ Начать"
+      container.querySelector('#btn-start').addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!currentActiveWorkout) return;
+
+        viewDashboard.style.display = 'none';
+        viewRunner.style.display = 'flex';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        await runnerInstance.start(currentActiveWorkout.id);
+      });
+    }
+
+    // 2. Первичное обновление карточки текущей тренировки
+    await updateDashboardCurrentCard();
+
+    // 3. Создаем календарь
+    const CalendarConstructor = (window.WorkoutCalendar && window.WorkoutCalendar.prototype)
+      ? window.WorkoutCalendar
+      : (window.WorkoutCalendar && window.WorkoutCalendar.WorkoutCalendar) || window.WorkoutCalendar;
+
+    calendarInstance = new CalendarConstructor({
+      container: '#calendar-mount',
+      service: WorkoutService,
+      initialYear: 2026,
+      initialMonth: 11,
+      initialSelectedDate: '2026-11-15',
+      onSelectWorkout: (workout, dateStr) => {
+        if (workout) {
+          openWorkoutModal(workout, dateStr);
+        }
+      }
+    });
+    await calendarInstance.render();
+
+    // 4. Инициализация модуля выполнения тренировки (Runner)
+    const RunnerConstructor = (window.WorkoutRunner && window.WorkoutRunner.prototype)
+      ? window.WorkoutRunner
+      : (window.WorkoutRunner && window.WorkoutRunner.WorkoutRunner) || window.WorkoutRunner;
+
+    runnerInstance = new RunnerConstructor({
+      container: '#view-runner',
+      service: WorkoutService,
+      onOpenTechnique: (ex, opts) => {
+        openTechniqueModal(ex, opts);
+      },
+      onCloseTechnique: (opts) => {
+        closeTechniqueModal(opts);
+      },
+      onBack: async () => {
+        // Возврат на экран личного кабинета без потери прогресса
+        viewRunner.style.display = 'none';
+        viewDashboard.style.display = 'flex';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        await updateDashboardCurrentCard();
+        if (calendarInstance) await calendarInstance.render();
+        await renderHistorySection();
+      },
+      onComplete: async (completedWorkout) => {
+        // Уведомление об успешном завершении и возврат в личный кабинет
+        alert('🎉 Тренировка успешно завершена! Отличная работа!');
+        viewRunner.style.display = 'none';
+        viewDashboard.style.display = 'flex';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        await updateDashboardCurrentCard();
+        if (calendarInstance) await calendarInstance.render();
+        await renderHistorySection();
+      },
+      onProgressUpdate: async (progress, workout) => {
+        // Прогресс уже сохранен в хранилище внутри runnerInstance
+      }
+    });
+
+    /**
+     * Отрисовка блока истории завершенных тренировок
+     */
+    async function renderHistorySection() {
+      const listEl = document.getElementById('history-list');
+      if (!listEl) return;
+
+      const all = await WorkoutService.getAllWorkouts();
+      const completed = all
+        .filter(w => w.status === 'completed')
+        .sort((a, b) => (b.scheduledDate || '').localeCompare(a.scheduledDate || ''));
+
+      if (completed.length === 0) {
+        listEl.innerHTML = '<div class="selected-empty-text">Пока нет завершённых тренировок.</div>';
+        return;
+      }
+
+      const months = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+      listEl.innerHTML = completed.map(w => {
+        const [y, m, d] = (w.scheduledDate || '').split('-');
+        const dateText = `${parseInt(d, 10)} ${months[parseInt(m, 10)]} ${y}`;
+        const autoText = w.autoCompleted ? ' • 00:00 МСК' : '';
+        const setsCount = w.content ? w.content.length : 0;
+
+        return `
+          <div class="mini-card" data-id="${w.id}">
+            <div class="mini-card-left">
+              <div class="mini-card-date history-date">
+                <span>✓ ${dateText}${autoText}</span>
+              </div>
+              <div class="mini-card-title">${escapeHtml(w.title)}</div>
+              <div class="mini-card-meta">${setsCount} сета • ID: <code>${w.id}</code></div>
+            </div>
+            <span class="mini-card-badge badge-success">Выполнено</span>
+          </div>
+        `;
+      }).join('');
+
+      // Привязка клика для просмотра завершенной тренировки из истории
+      listEl.querySelectorAll('.mini-card[data-id]').forEach(card => {
+        card.addEventListener('click', async () => {
+          const id = card.getAttribute('data-id');
+          const w = await WorkoutService.getWorkoutById(id);
+          if (w) openWorkoutModal(w);
+        });
+      });
+    }
+
+    // Первичный рендер истории
+    await renderHistorySection();
+
+    // Сброс демо-данных
+    const btnReset = document.getElementById('btn-reset-demo');
+    if (btnReset) {
+      btnReset.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (confirm('Сбросить данные к исходному состоянию?')) {
+          await WorkoutService.adapter.clear();
+          window.location.reload();
+        }
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
